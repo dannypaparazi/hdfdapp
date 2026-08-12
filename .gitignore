@@ -1,0 +1,11 @@
+.venv/
+.tmp/
+.env
+credentials.json
+token.json
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.DS_Store
