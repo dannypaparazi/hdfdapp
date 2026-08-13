@@ -1,0 +1,116 @@
+.container {
+  max-width: 1000px;
+}
+
+.container h2 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 1.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.emptyState {
+  background: #ecf0f1;
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+  color: #7f8c8d;
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.ordersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.orderCard {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.orderCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.photoContainer {
+  width: 100%;
+  height: 200px;
+  background: #ecf0f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.photoContainer img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardContent {
+  padding: 1.25rem;
+}
+
+.cardContent h3 {
+  margin: 0 0 0.5rem;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+.quantity {
+  margin: 0.5rem 0;
+  color: #34495e;
+  font-weight: 600;
+}
+
+.description {
+  margin: 0.75rem 0;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.timestamp {
+  margin: 0.75rem 0 1rem;
+  color: #95a5a6;
+  font-size: 0.85rem;
+}
+
+.deleteBtn {
+  width: 100%;
+  padding: 0.6rem;
+  background-color: #e74c3c;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.deleteBtn:hover {
+  background-color: #c0392b;
+}
+
+.deleteBtn:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 768px) {
+  .ordersGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .container h2 {
+    font-size: 1.4rem;
+  }
+}

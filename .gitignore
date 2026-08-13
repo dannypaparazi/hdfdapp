@@ -9,3 +9,9 @@ __pycache__/
 .ruff_cache/
 *.egg-info/
 .DS_Store
+
+# Node.js / React
+node_modules/
+dist/
+.vite/
+*.local
