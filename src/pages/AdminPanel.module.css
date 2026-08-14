@@ -1,3 +1,31 @@
 .container {
   max-width: 1200px;
 }
+
+.sections {
+  display: flex;
+  gap: 0;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #ecf0f1;
+}
+
+.sectionBtn {
+  padding: 1rem 1.5rem;
+  background: transparent;
+  color: #7f8c8d;
+  font-weight: 600;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.sectionBtn:hover {
+  color: #2c3e50;
+}
+
+.sectionBtn.active {
+  color: #27ae60;
+  border-bottom-color: #27ae60;
+}
