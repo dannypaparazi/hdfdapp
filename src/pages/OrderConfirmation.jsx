@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { addOrder, getOrders, deleteOrder } from '../utils/storage'
+import { addOrder, getOrders, deleteOrder, getItems } from '../utils/storage'
 import styles from './OrderConfirmation.module.css'
 
 export default function OrderConfirmation() {
@@ -11,10 +11,12 @@ export default function OrderConfirmation() {
     photoPreview: null,
   })
   const [orders, setOrders] = useState([])
+  const [menuItems, setMenuItems] = useState([])
   const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
     setOrders(getOrders())
+    setMenuItems(getItems())
   }, [])
 
   const handleInputChange = (e) => {
@@ -47,11 +49,16 @@ export default function OrderConfirmation() {
       return
     }
 
+    // Find unit price from menu
+    const menuItem = menuItems.find(item => item.name === formData.itemName)
+    const unitPrice = menuItem ? menuItem.cost : 0
+
     addOrder({
       itemName: formData.itemName,
       quantity: formData.quantity,
       description: formData.description,
       photo: formData.photo,
+      unitPrice: unitPrice,
       timestamp: new Date().toISOString(),
     })
 
@@ -86,6 +93,51 @@ export default function OrderConfirmation() {
 
   return (
     <div className={styles.container}>
+      {orders.length > 0 && (
+        <div className={styles.ordersSection}>
+          <h2>Order Items</h2>
+          <div className={styles.ordersList}>
+            {orders.map(order => (
+              <div key={order.id} className={styles.orderItem}>
+                {order.photo && (
+                  <div className={styles.itemPhoto}>
+                    <img src={order.photo} alt={order.itemName} />
+                  </div>
+                )}
+                <div className={styles.itemDetails}>
+                  <div className={styles.itemName}>{order.itemName}</div>
+                  {order.description && (
+                    <div className={styles.itemDescription}>{order.description}</div>
+                  )}
+                  {order.unitPrice > 0 && (
+                    <div className={styles.itemPrice}>Unit Price: ${order.unitPrice.toFixed(2)}</div>
+                  )}
+                </div>
+                <div className={styles.quantitySection}>
+                  <label>Qty:</label>
+                  <select
+                    value={order.quantity}
+                    onChange={(e) => handleQuantityChange(order.id, e.target.value)}
+                    className={styles.quantitySelect}
+                  >
+                    {Array.from({ length: 20 }, (_, i) => i + 1).map(num => (
+                      <option key={num} value={num}>{num}</option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  className={styles.deleteBtn}
+                  onClick={() => handleDeleteOrder(order.id)}
+                  title="Delete item"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <h2>Add New Item</h2>
 
       {submitted && (
@@ -152,48 +204,6 @@ export default function OrderConfirmation() {
           Add Item
         </button>
       </form>
-
-      {orders.length > 0 && (
-        <div className={styles.ordersSection}>
-          <h3>Added Items</h3>
-          <div className={styles.ordersList}>
-            {orders.map(order => (
-              <div key={order.id} className={styles.orderItem}>
-                {order.photo && (
-                  <div className={styles.itemPhoto}>
-                    <img src={order.photo} alt={order.itemName} />
-                  </div>
-                )}
-                <div className={styles.itemDetails}>
-                  <div className={styles.itemName}>{order.itemName}</div>
-                  {order.description && (
-                    <div className={styles.itemDescription}>{order.description}</div>
-                  )}
-                </div>
-                <div className={styles.quantitySection}>
-                  <label>Qty:</label>
-                  <select
-                    value={order.quantity}
-                    onChange={(e) => handleQuantityChange(order.id, e.target.value)}
-                    className={styles.quantitySelect}
-                  >
-                    {Array.from({ length: 20 }, (_, i) => i + 1).map(num => (
-                      <option key={num} value={num}>{num}</option>
-                    ))}
-                  </select>
-                </div>
-                <button
-                  className={styles.deleteBtn}
-                  onClick={() => handleDeleteOrder(order.id)}
-                  title="Delete item"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
