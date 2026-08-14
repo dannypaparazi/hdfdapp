@@ -1,0 +1,99 @@
+.container {
+  width: 100%;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.itemCard {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+  border: 1px solid #ecf0f1;
+}
+
+.itemCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.photoContainer {
+  width: 100%;
+  height: 200px;
+  background: #ecf0f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.photoContainer img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardContent {
+  padding: 1.25rem;
+}
+
+.cardContent h4 {
+  margin: 0 0 0.5rem;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+.cost {
+  margin: 0.5rem 0;
+  color: #27ae60;
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.description {
+  margin: 0.75rem 0;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.deleteBtn {
+  width: 100%;
+  padding: 0.6rem;
+  background-color: #e74c3c;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 0.75rem;
+}
+
+.deleteBtn:hover {
+  background-color: #c0392b;
+}
+
+.deleteBtn:active {
+  transform: scale(0.98);
+}
+
+.empty {
+  padding: 2rem;
+  text-align: center;
+  color: #7f8c8d;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #ecf0f1;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

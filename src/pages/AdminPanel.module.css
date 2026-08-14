@@ -31,36 +31,46 @@
   background-color: #c0392b;
 }
 
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.stat {
+.itemsSection {
   background: white;
-  padding: 1.5rem;
   border-radius: 8px;
+  padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sectionHeader {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #ecf0f1;
 }
 
-.statLabel {
-  color: #7f8c8d;
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.statValue {
+.sectionHeader h3 {
+  margin: 0;
   color: #2c3e50;
-  font-size: 2.5rem;
-  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.addBtn {
+  padding: 0.6rem 1.5rem;
+  background-color: #27ae60;
+  color: white;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border: none;
+  font-size: 0.9rem;
+}
+
+.addBtn:hover {
+  background-color: #229954;
+}
+
+.addBtn:active {
+  transform: scale(0.98);
 }
 
 @media (max-width: 768px) {
@@ -70,7 +80,13 @@
     gap: 1rem;
   }
 
-  .stats {
-    grid-template-columns: 1fr;
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .itemsSection {
+    padding: 1rem;
   }
 }

@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react'
-import { getOrders } from '../utils/storage'
+import { getItems, addItem, deleteItem } from '../utils/storage'
 import AdminLogin from '../components/AdminLogin'
-import OrdersList from '../components/OrdersList'
+import AdminItemsList from '../components/AdminItemsList'
+import AdminItemForm from '../components/AdminItemForm'
 import styles from './AdminPanel.module.css'
 
 const ADMIN_PASSWORD = 'admin123'
 
 export default function AdminPanel({ isLoggedIn, onLogin, onLogout }) {
-  const [orders, setOrders] = useState([])
+  const [items, setItems] = useState([])
+  const [showForm, setShowForm] = useState(false)
 
   useEffect(() => {
     if (isLoggedIn) {
-      setOrders(getOrders())
+      setItems(getItems())
     }
   }, [isLoggedIn])
 
@@ -21,6 +23,19 @@ export default function AdminPanel({ isLoggedIn, onLogin, onLogout }) {
       return true
     }
     return false
+  }
+
+  const handleAddItem = (itemData) => {
+    addItem(itemData)
+    setItems(getItems())
+    setShowForm(false)
+  }
+
+  const handleDeleteItem = (id) => {
+    if (confirm('Delete this item?')) {
+      deleteItem(id)
+      setItems(getItems())
+    }
   }
 
   if (!isLoggedIn) {
@@ -36,20 +51,26 @@ export default function AdminPanel({ isLoggedIn, onLogin, onLogout }) {
         </button>
       </div>
 
-      <div className={styles.stats}>
-        <div className={styles.stat}>
-          <span className={styles.statLabel}>Total Orders</span>
-          <span className={styles.statValue}>{orders.length}</span>
+      <div className={styles.itemsSection}>
+        <div className={styles.sectionHeader}>
+          <h3>Menu Items</h3>
+          <button
+            className={styles.addBtn}
+            onClick={() => setShowForm(!showForm)}
+          >
+            {showForm ? 'Cancel' : '+ Add Item'}
+          </button>
         </div>
-        <div className={styles.stat}>
-          <span className={styles.statLabel}>Total Items</span>
-          <span className={styles.statValue}>
-            {orders.reduce((sum, order) => sum + order.quantity, 0)}
-          </span>
-        </div>
-      </div>
 
-      <OrdersList orders={orders} onOrdersChange={setOrders} />
+        {showForm && (
+          <AdminItemForm onAdd={handleAddItem} />
+        )}
+
+        <AdminItemsList
+          items={items}
+          onDelete={handleDeleteItem}
+        />
+      </div>
     </div>
   )
 }
