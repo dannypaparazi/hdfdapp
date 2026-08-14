@@ -191,140 +191,153 @@
   border-radius: 6px;
 }
 
-.menuGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
+.menuList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.menuItem {
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #ecf0f1;
-  overflow: hidden;
-  transition: box-shadow 0.3s ease;
-}
-
-.menuItem:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.menuItemPhoto {
-  width: 100%;
-  height: 200px;
-  background: #ecf0f1;
+.menuLineItem {
   display: flex;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #ecf0f1;
+  transition: background-color 0.2s;
 }
 
-.menuItemPhoto img {
+.menuLineItem:hover {
+  background-color: #ecf0f1;
+}
+
+.lineItemPhoto {
+  width: 70px;
+  height: 70px;
+  background: white;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid #bdc3c7;
+}
+
+.lineItemPhoto img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.menuItemContent {
-  padding: 1.25rem;
+.lineItemContent {
+  flex: 1;
+  min-width: 0;
 }
 
-.menuItemContent h4 {
-  margin: 0 0 0.5rem;
+.lineItemName {
+  font-weight: 600;
   color: #2c3e50;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
 }
 
-.menuItemPrice {
-  margin: 0.5rem 0;
+.lineItemDescription {
+  color: #7f8c8d;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  line-height: 1.3;
+}
+
+.lineItemPrice {
   color: #27ae60;
   font-weight: 700;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
+  min-width: 70px;
+  text-align: center;
+  flex-shrink: 0;
 }
 
-.menuItemDescription {
-  margin: 0.75rem 0 1rem;
-  color: #7f8c8d;
-  font-size: 0.85rem;
-  line-height: 1.4;
-}
-
-.quantitySelector {
+.lineItemQuantity {
+  flex-shrink: 0;
   display: flex;
   gap: 0.5rem;
   align-items: center;
 }
 
-.menuQuantitySelect {
-  flex: 1;
-  padding: 0.6rem;
-  border: 1px solid #bdc3c7;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  background: white;
+.quantitySelectorLine {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 }
 
-.menuQuantitySelect:focus {
+.lineQuantitySelect {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  background: white;
+  min-width: 65px;
+}
+
+.lineQuantitySelect:focus {
   outline: none;
   border-color: #3498db;
   box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
-.addBtn {
-  padding: 0.6rem 1.25rem;
+.addLineBtn {
+  padding: 0.5rem 1rem;
   background-color: #27ae60;
   color: white;
   font-weight: 600;
   border-radius: 4px;
   border: none;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   transition: background-color 0.2s;
   white-space: nowrap;
 }
 
-.addBtn:hover:not(:disabled) {
+.addLineBtn:hover:not(:disabled) {
   background-color: #229954;
 }
 
-.addBtn:disabled {
+.addLineBtn:disabled {
   background-color: #95a5a6;
   cursor: not-allowed;
   opacity: 0.6;
 }
 
-/* Custom Quantity Input */
-.customQuantityInput {
+/* Custom Quantity Input Line */
+.customQuantityInputLine {
   display: flex;
   gap: 0.5rem;
-  width: 100%;
+  align-items: center;
 }
 
-.customQuantityInput input {
-  flex: 1;
-  padding: 0.6rem;
+.customQuantityInputLine input {
+  padding: 0.5rem 0.75rem;
   border: 1px solid #bdc3c7;
   border-radius: 4px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-family: inherit;
+  width: 65px;
 }
 
-.customQuantityInput input:focus {
+.customQuantityInputLine input:focus {
   outline: none;
   border-color: #3498db;
   box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
 .confirmBtn {
-  padding: 0.6rem 1rem;
+  padding: 0.5rem 0.75rem;
   background-color: #27ae60;
   color: white;
   font-weight: 600;
   border-radius: 4px;
   border: none;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   white-space: nowrap;
 }
 
@@ -333,19 +346,20 @@
 }
 
 .cancelBtn {
-  padding: 0.6rem 1rem;
-  background-color: #95a5a6;
+  padding: 0.5rem 0.75rem;
+  background-color: #e74c3c;
   color: white;
   font-weight: 600;
   border-radius: 4px;
   border: none;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   white-space: nowrap;
+  min-width: 35px;
 }
 
 .cancelBtn:hover {
-  background-color: #7f8c8d;
+  background-color: #c0392b;
 }
 
 @media (max-width: 768px) {

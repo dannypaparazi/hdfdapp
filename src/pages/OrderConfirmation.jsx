@@ -151,74 +151,75 @@ export default function OrderConfirmation() {
 
       {/* Menu Items */}
       <div className={styles.menuSection}>
-        <h2>Select Items</h2>
+        <h2>Menu</h2>
         {menuItems.length === 0 ? (
           <div className={styles.empty}>
             No menu items available. Admin needs to create menu items first.
           </div>
         ) : (
-          <div className={styles.menuGrid}>
+          <div className={styles.menuList}>
             {menuItems.map(item => (
-              <div key={item.id} className={styles.menuItem}>
+              <div key={item.id} className={styles.menuLineItem}>
                 {item.photo && (
-                  <div className={styles.menuItemPhoto}>
+                  <div className={styles.lineItemPhoto}>
                     <img src={item.photo} alt={item.name} />
                   </div>
                 )}
-                <div className={styles.menuItemContent}>
-                  <h4>{item.name}</h4>
-                  <p className={styles.menuItemPrice}>${item.cost.toFixed(2)}</p>
+                <div className={styles.lineItemContent}>
+                  <div className={styles.lineItemName}>{item.name}</div>
                   {item.description && (
-                    <p className={styles.menuItemDescription}>{item.description}</p>
+                    <div className={styles.lineItemDescription}>{item.description}</div>
                   )}
-
-                  <div className={styles.quantitySelector}>
-                    {customQuantityId === item.id ? (
-                      <div className={styles.customQuantityInput}>
-                        <input
-                          type="number"
-                          min="1"
-                          value={customQuantityValue}
-                          onChange={(e) => setCustomQuantityValue(e.target.value)}
-                          placeholder="Qty"
-                          autoFocus
-                        />
-                        <button
-                          className={styles.confirmBtn}
-                          onClick={handleCustomQuantitySubmit}
-                        >
-                          OK
-                        </button>
-                        <button
-                          className={styles.cancelBtn}
-                          onClick={() => setCustomQuantityId(null)}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <select
-                          value={selectedQuantities[item.id] || ''}
-                          onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                          className={styles.menuQuantitySelect}
-                        >
-                          <option value="">Select Qty</option>
-                          {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
-                            <option key={num} value={num}>{num}</option>
-                          ))}
-                          <option value="other">Other</option>
-                        </select>
-                        <button
-                          className={styles.addBtn}
-                          onClick={() => handleAddToOrder(item)}
-                          disabled={!selectedQuantities[item.id]}
-                        >
-                          Add
-                        </button>
-                      </>
-                    )}
-                  </div>
+                </div>
+                <div className={styles.lineItemPrice}>
+                  ${item.cost.toFixed(2)}
+                </div>
+                <div className={styles.lineItemQuantity}>
+                  {customQuantityId === item.id ? (
+                    <div className={styles.customQuantityInputLine}>
+                      <input
+                        type="number"
+                        min="1"
+                        value={customQuantityValue}
+                        onChange={(e) => setCustomQuantityValue(e.target.value)}
+                        placeholder="Qty"
+                        autoFocus
+                      />
+                      <button
+                        className={styles.confirmBtn}
+                        onClick={handleCustomQuantitySubmit}
+                      >
+                        OK
+                      </button>
+                      <button
+                        className={styles.cancelBtn}
+                        onClick={() => setCustomQuantityId(null)}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className={styles.quantitySelectorLine}>
+                      <select
+                        value={selectedQuantities[item.id] || ''}
+                        onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                        className={styles.lineQuantitySelect}
+                      >
+                        <option value="">Qty</option>
+                        {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
+                          <option key={num} value={num}>{num}</option>
+                        ))}
+                        <option value="other">Other</option>
+                      </select>
+                      <button
+                        className={styles.addLineBtn}
+                        onClick={() => handleAddToOrder(item)}
+                        disabled={!selectedQuantities[item.id]}
+                      >
+                        Add
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
