@@ -1,96 +1,47 @@
 .container {
-  max-width: 600px;
+  max-width: 1200px;
 }
 
-.container h2 {
-  margin-top: 0;
-  color: #2c3e50;
-  font-size: 1.6rem;
-}
-
-.successMessage {
-  background-color: #d4edda;
-  color: #155724;
+/* Message */
+.message {
   padding: 1rem;
   border-radius: 4px;
   margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.message.success {
+  background-color: #d4edda;
+  color: #155724;
   border-left: 4px solid #28a745;
 }
 
-.form {
+.message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-left: 4px solid #f5c6cb;
+}
+
+/* Current Order Section */
+.ordersSection {
   background: white;
   padding: 1.5rem;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.formGroup {
-  margin-bottom: 1.5rem;
-  display: flex;
-  flex-direction: column;
-}
-
-.formGroup label {
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #2c3e50;
-  font-size: 0.95rem;
-}
-
-.formGroup input[type="text"],
-.formGroup input[type="number"],
-.formGroup input[type="file"],
-.formGroup textarea {
-  padding: 0.75rem;
-  border: 1px solid #bdc3c7;
-  border-radius: 4px;
-  font-size: 0.95rem;
-  font-family: inherit;
-  transition: border-color 0.2s;
-}
-
-.formGroup input[type="text"]:focus,
-.formGroup input[type="number"]:focus,
-.formGroup textarea:focus {
-  outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-}
-
-.formGroup textarea {
-  resize: vertical;
-}
-
-.photoPreview {
-  margin-top: 1rem;
-  text-align: center;
-}
-
-.photoPreview img {
-  max-width: 100%;
-  max-height: 300px;
-  border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-.ordersSection {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background: #f8f9fa;
-  border-radius: 8px;
   border: 1px solid #ecf0f1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
 }
 
-.ordersSection h3 {
+.ordersSection h2 {
   margin-top: 0;
   color: #2c3e50;
-  font-size: 1.2rem;
 }
 
 .ordersList {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .orderItem {
@@ -98,10 +49,9 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  background: white;
+  background: #f8f9fa;
   border-radius: 6px;
   border: 1px solid #ecf0f1;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .itemPhoto {
@@ -195,31 +145,233 @@
   background-color: #c0392b;
 }
 
-.submitBtn {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: #27ae60;
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+/* Total Section */
+.totalSection {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 2px solid #27ae60;
+  text-align: center;
 }
 
-.submitBtn:hover {
+.totalSection h3 {
+  margin: 0 0 0.5rem;
+  color: #2c3e50;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.totalAmount {
+  margin: 0;
+  color: #27ae60;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+/* Menu Section */
+.menuSection {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #ecf0f1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.menuSection h2 {
+  margin-top: 0;
+  color: #2c3e50;
+}
+
+.empty {
+  padding: 2rem;
+  text-align: center;
+  color: #7f8c8d;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.menuGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.menuItem {
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #ecf0f1;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.menuItem:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.menuItemPhoto {
+  width: 100%;
+  height: 200px;
+  background: #ecf0f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.menuItemPhoto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.menuItemContent {
+  padding: 1.25rem;
+}
+
+.menuItemContent h4 {
+  margin: 0 0 0.5rem;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+.menuItemPrice {
+  margin: 0.5rem 0;
+  color: #27ae60;
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.menuItemDescription {
+  margin: 0.75rem 0 1rem;
+  color: #7f8c8d;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.quantitySelector {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.menuQuantitySelect {
+  flex: 1;
+  padding: 0.6rem;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  background: white;
+}
+
+.menuQuantitySelect:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.addBtn {
+  padding: 0.6rem 1.25rem;
+  background-color: #27ae60;
+  color: white;
+  font-weight: 600;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.addBtn:hover:not(:disabled) {
   background-color: #229954;
 }
 
-.submitBtn:active {
-  transform: scale(0.98);
+.addBtn:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Custom Quantity Input */
+.customQuantityInput {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.customQuantityInput input {
+  flex: 1;
+  padding: 0.6rem;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.customQuantityInput input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.confirmBtn {
+  padding: 0.6rem 1rem;
+  background-color: #27ae60;
+  color: white;
+  font-weight: 600;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.confirmBtn:hover {
+  background-color: #229954;
+}
+
+.cancelBtn {
+  padding: 0.6rem 1rem;
+  background-color: #95a5a6;
+  color: white;
+  font-weight: 600;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.cancelBtn:hover {
+  background-color: #7f8c8d;
 }
 
 @media (max-width: 768px) {
-  .container {
-    max-width: 100%;
+  .menuGrid {
+    grid-template-columns: 1fr;
   }
 
-  .form {
-    padding: 1rem;
+  .orderItem {
+    flex-wrap: wrap;
+  }
+
+  .quantitySelector {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .menuQuantitySelect,
+  .addBtn {
+    width: 100%;
+  }
+
+  .customQuantityInput {
+    flex-direction: column;
+  }
+
+  .customQuantityInput input {
+    width: 100%;
   }
 }

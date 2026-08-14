@@ -3,78 +3,72 @@ import { addOrder, getOrders, deleteOrder, getItems } from '../utils/storage'
 import styles from './OrderConfirmation.module.css'
 
 export default function OrderConfirmation() {
-  const [formData, setFormData] = useState({
-    itemName: '',
-    quantity: 1,
-    description: '',
-    photo: null,
-    photoPreview: null,
-  })
-  const [orders, setOrders] = useState([])
   const [menuItems, setMenuItems] = useState([])
-  const [submitted, setSubmitted] = useState(false)
+  const [orders, setOrders] = useState([])
+  const [selectedQuantities, setSelectedQuantities] = useState({})
+  const [customQuantityId, setCustomQuantityId] = useState(null)
+  const [customQuantityValue, setCustomQuantityValue] = useState('')
+  const [message, setMessage] = useState({ type: '', text: '' })
 
   useEffect(() => {
-    setOrders(getOrders())
     setMenuItems(getItems())
+    setOrders(getOrders())
   }, [])
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'quantity' ? parseInt(value) || 1 : value,
-    }))
-  }
-
-  const handlePhotoChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        setFormData(prev => ({
-          ...prev,
-          photo: event.target.result,
-          photoPreview: event.target.result,
-        }))
-      }
-      reader.readAsDataURL(file)
+  const handleQuantityChange = (itemId, value) => {
+    if (value === 'other') {
+      setCustomQuantityId(itemId)
+      setCustomQuantityValue('')
+    } else {
+      setSelectedQuantities(prev => ({
+        ...prev,
+        [itemId]: parseInt(value),
+      }))
+      setCustomQuantityId(null)
     }
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!formData.itemName.trim()) {
-      alert('Please enter an item name')
+  const handleCustomQuantitySubmit = () => {
+    const qty = parseInt(customQuantityValue)
+    if (!customQuantityValue || qty < 1) {
+      setMessage({ type: 'error', text: 'Please enter a valid quantity' })
+      return
+    }
+    setSelectedQuantities(prev => ({
+      ...prev,
+      [customQuantityId]: qty,
+    }))
+    setCustomQuantityId(null)
+    setCustomQuantityValue('')
+  }
+
+  const handleAddToOrder = (item) => {
+    const quantity = selectedQuantities[item.id]
+    if (!quantity) {
+      setMessage({ type: 'error', text: 'Please select a quantity' })
       return
     }
 
-    // Find unit price from menu
-    const menuItem = menuItems.find(item => item.name === formData.itemName)
-    const unitPrice = menuItem ? menuItem.cost : 0
-
     addOrder({
-      itemName: formData.itemName,
-      quantity: formData.quantity,
-      description: formData.description,
-      photo: formData.photo,
-      unitPrice: unitPrice,
+      itemName: item.name,
+      quantity: quantity,
+      description: item.description,
+      photo: item.photo,
+      unitPrice: item.cost,
       timestamp: new Date().toISOString(),
     })
 
-    setFormData({
-      itemName: '',
-      quantity: 1,
-      description: '',
-      photo: null,
-      photoPreview: null,
+    setSelectedQuantities(prev => {
+      const updated = { ...prev }
+      delete updated[item.id]
+      return updated
     })
     setOrders(getOrders())
-    setSubmitted(true)
-    setTimeout(() => setSubmitted(false), 3000)
+    setMessage({ type: 'success', text: `${item.name} x${quantity} added to order` })
+    setTimeout(() => setMessage({ type: '', text: '' }), 2000)
   }
 
-  const handleQuantityChange = (orderId, newQuantity) => {
+  const handleQuantityChangeOrder = (orderId, newQuantity) => {
     const order = orders.find(o => o.id === orderId)
     if (order) {
       deleteOrder(orderId)
@@ -91,11 +85,14 @@ export default function OrderConfirmation() {
     setOrders(getOrders())
   }
 
+  const totalAmount = orders.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
+
   return (
     <div className={styles.container}>
+      {/* Current Order */}
       {orders.length > 0 && (
         <div className={styles.ordersSection}>
-          <h2>Order Items</h2>
+          <h2>Current Order</h2>
           <div className={styles.ordersList}>
             {orders.map(order => (
               <div key={order.id} className={styles.orderItem}>
@@ -110,19 +107,22 @@ export default function OrderConfirmation() {
                     <div className={styles.itemDescription}>{order.description}</div>
                   )}
                   {order.unitPrice > 0 && (
-                    <div className={styles.itemPrice}>Unit Price: ${order.unitPrice.toFixed(2)}</div>
+                    <div className={styles.itemPrice}>
+                      ${order.unitPrice.toFixed(2)} x {order.quantity} = ${(order.unitPrice * order.quantity).toFixed(2)}
+                    </div>
                   )}
                 </div>
                 <div className={styles.quantitySection}>
                   <label>Qty:</label>
                   <select
                     value={order.quantity}
-                    onChange={(e) => handleQuantityChange(order.id, e.target.value)}
+                    onChange={(e) => handleQuantityChangeOrder(order.id, e.target.value)}
                     className={styles.quantitySelect}
                   >
-                    {Array.from({ length: 20 }, (_, i) => i + 1).map(num => (
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
                       <option key={num} value={num}>{num}</option>
                     ))}
+                    <option value="">Other</option>
                   </select>
                 </div>
                 <button
@@ -135,75 +135,96 @@ export default function OrderConfirmation() {
               </div>
             ))}
           </div>
+          <div className={styles.totalSection}>
+            <h3>Order Total</h3>
+            <p className={styles.totalAmount}>${totalAmount.toFixed(2)}</p>
+          </div>
         </div>
       )}
 
-      <h2>Add New Item</h2>
-
-      {submitted && (
-        <div className={styles.successMessage}>
-          ✓ Item added successfully!
+      {/* Message */}
+      {message.text && (
+        <div className={`${styles.message} ${styles[message.type]}`}>
+          {message.text}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.formGroup}>
-          <label htmlFor="itemName">Item Name *</label>
-          <input
-            id="itemName"
-            type="text"
-            name="itemName"
-            value={formData.itemName}
-            onChange={handleInputChange}
-            placeholder="e.g., Beef Slice, Tofu, Noodles"
-            required
-          />
-        </div>
+      {/* Menu Items */}
+      <div className={styles.menuSection}>
+        <h2>Select Items</h2>
+        {menuItems.length === 0 ? (
+          <div className={styles.empty}>
+            No menu items available. Admin needs to create menu items first.
+          </div>
+        ) : (
+          <div className={styles.menuGrid}>
+            {menuItems.map(item => (
+              <div key={item.id} className={styles.menuItem}>
+                {item.photo && (
+                  <div className={styles.menuItemPhoto}>
+                    <img src={item.photo} alt={item.name} />
+                  </div>
+                )}
+                <div className={styles.menuItemContent}>
+                  <h4>{item.name}</h4>
+                  <p className={styles.menuItemPrice}>${item.cost.toFixed(2)}</p>
+                  {item.description && (
+                    <p className={styles.menuItemDescription}>{item.description}</p>
+                  )}
 
-        <div className={styles.formGroup}>
-          <label htmlFor="quantity">Quantity *</label>
-          <input
-            id="quantity"
-            type="number"
-            name="quantity"
-            value={formData.quantity}
-            onChange={handleInputChange}
-            min="1"
-            required
-          />
-        </div>
-
-        <div className={styles.formGroup}>
-          <label htmlFor="description">Description</label>
-          <textarea
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleInputChange}
-            placeholder="Add any notes or special instructions"
-            rows="3"
-          />
-        </div>
-
-        <div className={styles.formGroup}>
-          <label htmlFor="photo">Upload Photo</label>
-          <input
-            id="photo"
-            type="file"
-            accept="image/*"
-            onChange={handlePhotoChange}
-          />
-          {formData.photoPreview && (
-            <div className={styles.photoPreview}>
-              <img src={formData.photoPreview} alt="Preview" />
-            </div>
-          )}
-        </div>
-
-        <button type="submit" className={styles.submitBtn}>
-          Add Item
-        </button>
-      </form>
+                  <div className={styles.quantitySelector}>
+                    {customQuantityId === item.id ? (
+                      <div className={styles.customQuantityInput}>
+                        <input
+                          type="number"
+                          min="1"
+                          value={customQuantityValue}
+                          onChange={(e) => setCustomQuantityValue(e.target.value)}
+                          placeholder="Qty"
+                          autoFocus
+                        />
+                        <button
+                          className={styles.confirmBtn}
+                          onClick={handleCustomQuantitySubmit}
+                        >
+                          OK
+                        </button>
+                        <button
+                          className={styles.cancelBtn}
+                          onClick={() => setCustomQuantityId(null)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <select
+                          value={selectedQuantities[item.id] || ''}
+                          onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                          className={styles.menuQuantitySelect}
+                        >
+                          <option value="">Select Qty</option>
+                          {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
+                            <option key={num} value={num}>{num}</option>
+                          ))}
+                          <option value="other">Other</option>
+                        </select>
+                        <button
+                          className={styles.addBtn}
+                          onClick={() => handleAddToOrder(item)}
+                          disabled={!selectedQuantities[item.id]}
+                        >
+                          Add
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
