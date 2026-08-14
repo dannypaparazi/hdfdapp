@@ -1,0 +1,127 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  padding: 1rem;
+}
+
+.loginBox {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 400px;
+}
+
+.loginBox h1 {
+  margin: 0 0 0.5rem;
+  color: #2c3e50;
+  text-align: center;
+  font-size: 1.8rem;
+}
+
+.subtitle {
+  margin: 0 0 1.5rem;
+  color: #7f8c8d;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.formGroup {
+  margin-bottom: 1.5rem;
+}
+
+.formGroup label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+  font-size: 0.95rem;
+}
+
+.formGroup input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.formGroup input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.formGroup input:disabled {
+  background-color: #ecf0f1;
+  cursor: not-allowed;
+}
+
+.error {
+  background-color: #fadbd8;
+  color: #a93226;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  border-left: 4px solid #e74c3c;
+}
+
+.loginBtn {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #3498db;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-bottom: 1.5rem;
+}
+
+.loginBtn:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.loginBtn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.loginBtn:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.hint {
+  margin: 0;
+  padding-top: 1rem;
+  border-top: 1px solid #ecf0f1;
+  color: #7f8c8d;
+  font-size: 0.85rem;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.hint strong {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .loginBox {
+    padding: 1.5rem;
+  }
+
+  .loginBox h1 {
+    font-size: 1.4rem;
+  }
+}

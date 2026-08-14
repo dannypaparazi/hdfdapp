@@ -8,13 +8,47 @@
   background-color: #2c3e50;
   color: white;
   padding: 1.5rem;
-  text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .header h1 {
   margin: 0;
   font-size: 1.8rem;
+  flex: 1;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.userInfo span {
+  color: #ecf0f1;
+  font-weight: 600;
+}
+
+.logoutBtn {
+  padding: 0.6rem 1.2rem;
+  background-color: #e74c3c;
+  color: white;
+  font-weight: 600;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.logoutBtn:hover {
+  background-color: #c0392b;
+}
+
+.logoutBtn:active {
+  transform: scale(0.98);
 }
 
 .nav {
