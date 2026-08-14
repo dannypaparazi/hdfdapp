@@ -4,72 +4,106 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 ## Project Overview
 
-A React-based web application for managing orders at Hotpot Di Focolare. Frontend-only (localStorage for persistence, no backend API required).
+A React + Vite web application for managing a restaurant hotpot ordering system. Frontend-only (localStorage for persistence, no backend API required). Customers place orders, admins manage the menu.
 
-**Features:**
-- **Order Confirmation**: Self-service form to add items with photo upload, description, and quantity
-- **Order History**: View past orders
-- **Admin Panel**: Requires login to view and manage orders
+**Core Features:**
+- **Order Confirmation**: Customers add orders with quantity and special notes
+- **Order History**: View past customer orders with photos and details
+- **Admin Panel**: Login-protected menu management (create items with photo, description, cost)
 
 ## Tech Stack
 
-- **React** (functional components, hooks)
-- **Styling**: TBD (CSS modules, Tailwind, styled-components, etc.)
-- **State Management**: React Context or local component state
-- **Storage**: localStorage for order persistence
-- **Authentication**: Simple admin login (hardcoded or localStorage-based for MVP)
+- **React 18** (functional components, hooks)
+- **Vite 5** (dev server, build tool)
+- **CSS Modules** (scoped, component-specific styling)
+- **Storage**: localStorage (orders and menu items, separate collections)
+- **Authentication**: Simple hardcoded admin password (admin123)
 
 ## Project Structure
 
 ```
 src/
-  components/          # Reusable UI components
-  pages/               # Page-level components (OrderConfirmation, OrderHistory, Admin)
-  context/             # React Context for state management (if needed)
-  utils/               # Helpers, constants, localStorage management
-  styles/              # Global styles or CSS modules
-  App.jsx              # Main app with routing/tabs
-public/                # Static assets
+  components/
+    AdminLogin.jsx                  # Admin login form
+    AdminItemForm.jsx               # Form to create menu items
+    AdminItemsList.jsx              # Grid display of menu items
+    OrdersList.jsx                  # Admin order management (legacy)
+  pages/
+    OrderConfirmation.jsx           # Customer order form
+    OrderHistory.jsx                # View customer orders
+    AdminPanel.jsx                  # Admin dashboard
+  utils/
+    storage.js                      # localStorage management (items & orders)
+  App.jsx                           # Main app with tab navigation
+  App.module.css                    # App layout and tabs
+  index.css                         # Global styles
+  main.jsx                          # Entry point
+vite.config.js                      # Vite configuration
+.claude/launch.json                 # Dev server config (port 3000)
 ```
 
-## Key Features to Build
+## Feature Details
 
-1. **Order Confirmation Tab**
-   - Form: item name, photo upload, description, quantity
-   - Save orders to localStorage
-   - Success feedback after submission
+### Customer-Facing (Order Confirmation & History)
+- Browse menu (via Order Confirmation page)
+- Add items to order with quantity, photo, description
+- View order history with timestamps and delete option
+- Photos stored as base64 in localStorage
 
-2. **Order History Tab**
-   - Display all saved orders
-   - Show item details, photo, quantity, timestamp
-   - Option to delete/edit orders
+### Admin Panel (after login with admin123)
+- Create menu items with:
+  - Item name
+  - Cost (displayed in $)
+  - Description
+  - Photo upload
+- View all menu items in responsive card grid
+- Delete items from menu
+- Separate localStorage collection for menu items
 
-3. **Admin Login**
-   - Simple login prompt (username/password)
-   - Protect admin panel behind authentication check
-   - Store auth state in localStorage (or session)
+## Storage Schema
+
+**Items** (`hotpot_items`)
+```javascript
+{
+  id: "timestamp",
+  name: "Item Name",
+  cost: 12.99,
+  description: "Item details",
+  photo: "base64-string"
+}
+```
+
+**Orders** (`hotpot_orders`)
+```javascript
+{
+  id: "timestamp",
+  itemName: "Item Name",
+  quantity: 2,
+  description: "Special notes",
+  photo: "base64-string",
+  timestamp: "ISO-string"
+}
+```
 
 ## Development Guidelines
 
-- **Components first**: Build reusable components, test them in isolation
-- **Start with static**: Build the UI structure before adding state/logic
-- **localStorage**: Use for all persistence (orders, admin auth)
-- **No external APIs**: Everything stays in the browser
-- **Mobile-friendly**: Design should work on desktop and mobile
+- Use CSS Modules for all component styling (no global class names)
+- Keep components in `src/components/` for reuse
+- Keep pages in `src/pages/` for top-level routes
+- Use localStorage utilities in `src/utils/storage.js` for all data persistence
+- Run `npm run dev` to start Vite dev server on http://localhost:3000
+- Test all three tabs: Order Confirmation, Order History, Admin
 
 ## Commands
 
 ```bash
-npm install              # Install dependencies (after initial setup)
-npm start                # Dev server (usually http://localhost:3000)
-npm run build            # Production build
-npm test                 # Run tests (if tests are set up)
+npm install                    # Install dependencies
+npm run dev                    # Start Vite dev server (http://localhost:3000)
+npm run build                  # Production build (dist/)
+npm run preview                # Preview production build locally
 ```
 
-## Before You Start
+## Admin Credentials
 
-Ask if unclear:
-- Styling framework preference (Tailwind, CSS modules, etc.)?
-- Admin credentials approach (hardcoded, prompt each session)?
-- Photo handling (base64 in localStorage, or blob preview only)?
-- Order data structure (what fields to store)?
+- **Password**: `admin123` (hardcoded in AdminPanel.jsx)
+- Change in `src/pages/AdminPanel.jsx` line 8: `const ADMIN_PASSWORD = 'admin123'`
