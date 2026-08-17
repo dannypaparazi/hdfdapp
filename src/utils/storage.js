@@ -2,21 +2,33 @@ const ORDERS_KEY = 'hotpot_orders'
 const ITEMS_KEY = 'hotpot_items'
 
 // Orders functions
-export function getOrders() {
+export function getOrders(table, includeCompleted = false) {
   try {
     const orders = localStorage.getItem(ORDERS_KEY)
-    return orders ? JSON.parse(orders) : []
+    const allOrders = orders ? JSON.parse(orders) : []
+    let filtered = allOrders
+
+    if (table !== undefined) {
+      filtered = allOrders.filter(order => order.table === table)
+    }
+
+    if (!includeCompleted) {
+      filtered = filtered.filter(order => order.status !== 'completed')
+    }
+
+    return filtered
   } catch (error) {
     console.error('Error reading orders:', error)
     return []
   }
 }
 
-export function addOrder(order) {
+export function addOrder(order, table) {
   try {
-    const orders = getOrders()
+    const orders = getOrders(undefined, true)
     const newOrder = {
       ...order,
+      table: table,
       id: Date.now().toString(),
     }
     orders.push(newOrder)
@@ -30,7 +42,7 @@ export function addOrder(order) {
 
 export function deleteOrder(id) {
   try {
-    const orders = getOrders()
+    const orders = getOrders(undefined, true)
     const filtered = orders.filter(order => order.id !== id)
     localStorage.setItem(ORDERS_KEY, JSON.stringify(filtered))
   } catch (error) {
@@ -43,6 +55,18 @@ export function clearAllOrders() {
     localStorage.setItem(ORDERS_KEY, JSON.stringify([]))
   } catch (error) {
     console.error('Error clearing orders:', error)
+  }
+}
+
+export function completeOrders(table) {
+  try {
+    const orders = getOrders(undefined, true)
+    const updated = orders.map(order =>
+      order.table === table ? { ...order, status: 'completed' } : order
+    )
+    localStorage.setItem(ORDERS_KEY, JSON.stringify(updated))
+  } catch (error) {
+    console.error('Error completing orders:', error)
   }
 }
 

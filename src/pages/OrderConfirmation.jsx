@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { addOrder, getOrders, deleteOrder, getItems } from '../utils/storage'
+import { addOrder, getOrders, deleteOrder, getItems, completeOrders } from '../utils/storage'
 import styles from './OrderConfirmation.module.css'
 
-export default function OrderConfirmation() {
+export default function OrderConfirmation({ table }) {
   const [menuItems, setMenuItems] = useState([])
   const [orders, setOrders] = useState([])
   const [selectedQuantities, setSelectedQuantities] = useState({})
@@ -12,8 +12,8 @@ export default function OrderConfirmation() {
 
   useEffect(() => {
     setMenuItems(getItems())
-    setOrders(getOrders())
-  }, [])
+    setOrders(getOrders(table))
+  }, [table])
 
   const handleQuantityChange = (itemId, value) => {
     if (value === 'other') {
@@ -56,14 +56,14 @@ export default function OrderConfirmation() {
       photo: item.photo,
       unitPrice: item.cost,
       timestamp: new Date().toISOString(),
-    })
+    }, table)
 
     setSelectedQuantities(prev => {
       const updated = { ...prev }
       delete updated[item.id]
       return updated
     })
-    setOrders(getOrders())
+    setOrders(getOrders(table))
     setMessage({ type: 'success', text: `${item.name} x${quantity} added to order` })
     setTimeout(() => setMessage({ type: '', text: '' }), 2000)
   }
@@ -75,20 +75,37 @@ export default function OrderConfirmation() {
       addOrder({
         ...order,
         quantity: parseInt(newQuantity),
-      })
-      setOrders(getOrders())
+      }, table)
+      setOrders(getOrders(table))
     }
   }
 
   const handleDeleteOrder = (orderId) => {
     deleteOrder(orderId)
-    setOrders(getOrders())
+    setOrders(getOrders(table))
+  }
+
+  const handleCheckout = () => {
+    if (orders.length === 0) {
+      setMessage({ type: 'error', text: 'No items to checkout' })
+      return
+    }
+    completeOrders(table)
+    setOrders([])
+    setMessage({ type: 'success', text: 'Order checked out successfully! Items moved to Order History.' })
+    setTimeout(() => setMessage({ type: '', text: '' }), 3000)
   }
 
   const totalAmount = orders.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
 
   return (
     <div className={styles.container}>
+      {table && (
+        <div className={styles.tableHeader}>
+          <h3>Table {table}</h3>
+        </div>
+      )}
+
       {/* Current Order */}
       {orders.length > 0 && (
         <div className={styles.ordersSection}>
@@ -138,6 +155,9 @@ export default function OrderConfirmation() {
           <div className={styles.totalSection}>
             <h3>Order Total</h3>
             <p className={styles.totalAmount}>${totalAmount.toFixed(2)}</p>
+            <button className={styles.checkoutBtn} onClick={handleCheckout}>
+              Checkout
+            </button>
           </div>
         </div>
       )}

@@ -14,10 +14,25 @@
   align-items: center;
 }
 
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex: 1;
+}
+
 .header h1 {
   margin: 0;
   font-size: 1.8rem;
-  flex: 1;
+}
+
+.tableIndicator {
+  background-color: #f39c12;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 
 .userInfo {
@@ -78,6 +93,16 @@
 .tab.active {
   color: #f39c12;
   border-bottom-color: #f39c12;
+}
+
+.tab:disabled {
+  color: #95a5a6;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.tab:disabled:hover {
+  background-color: transparent;
 }
 
 .content {
