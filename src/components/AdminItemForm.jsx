@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { compressImage } from '../utils/storage'
 import styles from './AdminItemForm.module.css'
 
 export default function AdminItemForm({ onAdd }) {
@@ -18,15 +19,16 @@ export default function AdminItemForm({ onAdd }) {
     }))
   }
 
-  const handlePhotoChange = (e) => {
+  const handlePhotoChange = async (e) => {
     const file = e.target.files[0]
     if (file) {
       const reader = new FileReader()
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
+        const compressed = await compressImage(event.target.result)
         setFormData(prev => ({
           ...prev,
-          photo: event.target.result,
-          photoPreview: event.target.result,
+          photo: compressed,
+          photoPreview: compressed,
         }))
       }
       reader.readAsDataURL(file)

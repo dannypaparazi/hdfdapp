@@ -1,3 +1,4 @@
+import logo from '../assets/logo.png'
 import styles from './Home.module.css'
 
 export default function Home({ onTableSelect }) {
@@ -6,7 +7,7 @@ export default function Home({ onTableSelect }) {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <div className={styles.logo}>🍲</div>
+        <img src={logo} alt="Hotpot Di Focolare" className={styles.logo} />
         <h1>Hotpot Di Focolare</h1>
         <p className={styles.subtitle}>Order Management System</p>
       </div>

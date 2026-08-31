@@ -1,0 +1,189 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.container h1 {
+  color: #2c3e50;
+  margin: 0 0 0.5rem;
+}
+
+.subtitle {
+  color: #7f8c8d;
+  margin: 0 0 2rem;
+  font-size: 0.95rem;
+}
+
+.empty {
+  text-align: center;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  color: #7f8c8d;
+}
+
+.dailyBreakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.dayCard {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.dayHeader {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dayHeader h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.daySummary {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.totalQty,
+.totalSales {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Table Styles */
+.itemsTable {
+  display: flex;
+  flex-direction: column;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-bottom: 2px solid #ecf0f1;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #ecf0f1;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.tableRow:hover {
+  background: #f8f9fa;
+}
+
+.colItemName {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.colQty,
+.colOrders,
+.colPrice,
+.colTotal {
+  text-align: center;
+}
+
+.badge {
+  display: inline-block;
+  background: #3498db;
+  color: white;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  min-width: 50px;
+}
+
+.totalBadge {
+  display: inline-block;
+  background: #27ae60;
+  color: white;
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .dayHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 0.75rem;
+  }
+
+  .tableHeader {
+    display: none;
+  }
+
+  .tableRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 1px solid #ecf0f1;
+    margin-bottom: 0.75rem;
+    border-radius: 6px;
+  }
+
+  .colItemName {
+    grid-column: 1 / -1;
+    border-bottom: 2px solid #ecf0f1;
+    padding-bottom: 0.75rem;
+  }
+
+  .colQty::before,
+  .colOrders::before,
+  .colPrice::before,
+  .colTotal::before {
+    content: attr(data-label);
+    display: block;
+    font-weight: 600;
+    color: #7f8c8d;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+  }
+}

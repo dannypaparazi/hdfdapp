@@ -4,6 +4,7 @@ import Login from './components/Login'
 import Home from './pages/Home'
 import OrderConfirmation from './pages/OrderConfirmation'
 import OrderHistory from './pages/OrderHistory'
+import QuantityHistory from './pages/QuantityHistory'
 import AdminPanel from './pages/AdminPanel'
 import styles from './App.module.css'
 
@@ -73,6 +74,12 @@ export default function App() {
           Order History
         </button>
         <button
+          className={`${styles.tab} ${activeTab === 'quantity' ? styles.active : ''}`}
+          onClick={() => setActiveTab('quantity')}
+        >
+          Quantity History
+        </button>
+        <button
           className={`${styles.tab} ${activeTab === 'admin' ? styles.active : ''}`}
           onClick={() => setActiveTab('admin')}
         >
@@ -84,6 +91,7 @@ export default function App() {
         {activeTab === 'home' && <Home onTableSelect={handleTableSelect} />}
         {activeTab === 'confirm' && selectedTable && <OrderConfirmation table={selectedTable} />}
         {activeTab === 'history' && <OrderHistory />}
+        {activeTab === 'quantity' && <QuantityHistory />}
         {activeTab === 'admin' && <AdminPanel currentUser={currentUser} />}
       </main>
     </div>

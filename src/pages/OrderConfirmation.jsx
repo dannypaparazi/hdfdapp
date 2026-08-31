@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { addOrder, getOrders, deleteOrder, getItems, completeOrders } from '../utils/storage'
+import { getFormattedTableName, incrementTableCounter } from '../utils/tableCounter'
 import styles from './OrderConfirmation.module.css'
 
 export default function OrderConfirmation({ table }) {
@@ -49,21 +50,35 @@ export default function OrderConfirmation({ table }) {
       return
     }
 
-    addOrder({
+    if (!table) {
+      setMessage({ type: 'error', text: 'Error: Table not selected' })
+      return
+    }
+
+    console.log('🔵 ADDING ORDER - Table:', table, 'Item:', item.name, 'Qty:', quantity)
+
+    const result = addOrder({
       itemName: item.name,
       quantity: quantity,
       description: item.description,
-      photo: item.photo,
       unitPrice: item.cost,
       timestamp: new Date().toISOString(),
     }, table)
+
+    console.log('🟢 ORDER ADDED - Result:', result)
 
     setSelectedQuantities(prev => {
       const updated = { ...prev }
       delete updated[item.id]
       return updated
     })
-    setOrders(getOrders(table))
+
+    const updatedOrders = getOrders(table)
+    console.log('🟡 FETCHING ORDERS - Table:', table, 'Found:', updatedOrders.length, 'orders', updatedOrders)
+
+    setOrders(updatedOrders)
+    console.log('🟣 STATE SET - Orders length:', updatedOrders.length)
+
     setMessage({ type: 'success', text: `${item.name} x${quantity} added to order` })
     setTimeout(() => setMessage({ type: '', text: '' }), 2000)
   }
@@ -91,6 +106,7 @@ export default function OrderConfirmation({ table }) {
       return
     }
     completeOrders(table)
+    incrementTableCounter(table)
     setOrders([])
     setMessage({ type: 'success', text: 'Order checked out successfully! Items moved to Order History.' })
     setTimeout(() => setMessage({ type: '', text: '' }), 3000)
@@ -102,7 +118,7 @@ export default function OrderConfirmation({ table }) {
     <div className={styles.container}>
       {table && (
         <div className={styles.tableHeader}>
-          <h3>Table {table}</h3>
+          <h3>Table {getFormattedTableName(table)}</h3>
         </div>
       )}
 
@@ -130,17 +146,21 @@ export default function OrderConfirmation({ table }) {
                   )}
                 </div>
                 <div className={styles.quantitySection}>
-                  <label>Qty:</label>
-                  <select
-                    value={order.quantity}
-                    onChange={(e) => handleQuantityChangeOrder(order.id, e.target.value)}
-                    className={styles.quantitySelect}
+                  <button
+                    className={styles.quantityBtn}
+                    onClick={() => handleQuantityChangeOrder(order.id, Math.max(1, order.quantity - 1))}
+                    title="Decrease quantity"
                   >
-                    {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
-                      <option key={num} value={num}>{num}</option>
-                    ))}
-                    <option value="">Other</option>
-                  </select>
+                    −
+                  </button>
+                  <span className={styles.quantityDisplay}>{order.quantity}</span>
+                  <button
+                    className={styles.quantityBtn}
+                    onClick={() => handleQuantityChangeOrder(order.id, order.quantity + 1)}
+                    title="Increase quantity"
+                  >
+                    +
+                  </button>
                 </div>
                 <button
                   className={styles.deleteBtn}

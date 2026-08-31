@@ -12,9 +12,11 @@
 }
 
 .logo {
-  font-size: 4rem;
-  margin-bottom: 1rem;
+  width: 160px;
+  height: auto;
+  margin-bottom: 1.5rem;
   animation: bounce 2s infinite;
+  border-radius: 8px;
 }
 
 @keyframes bounce {
@@ -107,7 +109,7 @@
   }
 
   .logo {
-    font-size: 3rem;
+    width: 130px;
   }
 
   .subtitle {

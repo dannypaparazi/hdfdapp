@@ -58,18 +58,23 @@ export default function OrderHistory() {
   const selectedDateOrders = getOrdersForDate(selectedDate)
 
   const groupedByTable = selectedDateOrders.reduce((acc, order) => {
-    const tableNum = order.table !== undefined ? order.table : 'Unknown'
-    if (!acc[tableNum]) {
-      acc[tableNum] = []
+    // Group by tableSession (e.g., "1-1", "1-2") or fall back to table number
+    const tableKey = order.tableSession || `${order.table}-1` || 'Unknown'
+    if (!acc[tableKey]) {
+      acc[tableKey] = []
     }
-    acc[tableNum].push(order)
+    acc[tableKey].push(order)
     return acc
   }, {})
 
   const sortedTables = Object.keys(groupedByTable).sort((a, b) => {
     if (a === 'Unknown') return 1
     if (b === 'Unknown') return -1
-    return Number(a) - Number(b)
+    // Sort by table number first, then by session number
+    const [aTable, aSession] = a.split('-').map(Number)
+    const [bTable, bSession] = b.split('-').map(Number)
+    if (aTable !== bTable) return aTable - bTable
+    return (aSession || 1) - (bSession || 1)
   })
 
   const formatDateDisplay = (dateStr) => {

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { login } from '../utils/auth'
+import logo from '../assets/logo.png'
 import styles from './Login.module.css'
 
 export default function Login({ onLoginSuccess }) {
@@ -39,6 +40,9 @@ export default function Login({ onLoginSuccess }) {
   return (
     <div className={styles.container}>
       <div className={styles.loginBox}>
+        <div className={styles.logoContainer}>
+          <img src={logo} alt="Hotpot Di Focolare" className={styles.logo} />
+        </div>
         <h1>Hotpot Di Focolare</h1>
         <p className={styles.subtitle}>Order Management System</p>
 

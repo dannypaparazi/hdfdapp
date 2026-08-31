@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import AdminAccounts from '../components/AdminAccounts'
 import MenuManager from '../components/MenuManager'
+import StorageManager from '../components/StorageManager'
 import styles from './AdminPanel.module.css'
 
 export default function AdminPanel({ currentUser }) {
@@ -21,10 +22,17 @@ export default function AdminPanel({ currentUser }) {
         >
           Accounts
         </button>
+        <button
+          className={`${styles.sectionBtn} ${activeSection === 'storage' ? styles.active : ''}`}
+          onClick={() => setActiveSection('storage')}
+        >
+          Storage
+        </button>
       </div>
 
       {activeSection === 'menu' && <MenuManager />}
       {activeSection === 'accounts' && <AdminAccounts currentUser={currentUser} />}
+      {activeSection === 'storage' && <StorageManager />}
     </div>
   )
 }
