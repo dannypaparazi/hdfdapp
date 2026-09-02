@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { getCurrentUser, logout } from './utils/auth'
 import Login from './components/Login'
+import UserLogin from './pages/UserLogin'
+import UserOrder from './pages/UserOrder'
 import Home from './pages/Home'
 import OrderConfirmation from './pages/OrderConfirmation'
 import OrderHistory from './pages/OrderHistory'
@@ -10,6 +12,7 @@ import styles from './App.module.css'
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(getCurrentUser())
+  const [userTable, setUserTable] = useState(null)
   const [activeTab, setActiveTab] = useState('home')
   const [selectedTable, setSelectedTable] = useState(null)
 
@@ -26,11 +29,30 @@ export default function App() {
     setSelectedTable(null)
   }
 
+  const handleUserLogin = (tableNum) => {
+    setUserTable(tableNum)
+  }
+
+  const handleUserLogout = () => {
+    setUserTable(null)
+  }
+
   const handleTableSelect = (tableNum) => {
     setSelectedTable(tableNum)
     setActiveTab('confirm')
   }
 
+  // User ordering mode (via QR code)
+  if (userTable !== null) {
+    return <UserOrder table={userTable} onLogout={handleUserLogout} />
+  }
+
+  // User login via QR code
+  if (currentUser === null && typeof currentUser !== 'object') {
+    return <UserLogin onLogin={handleUserLogin} />
+  }
+
+  // Admin login
   if (!currentUser) {
     return <Login onLoginSuccess={handleLoginSuccess} />
   }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import AdminAccounts from '../components/AdminAccounts'
 import MenuManager from '../components/MenuManager'
 import StorageManager from '../components/StorageManager'
+import QRCodeGenerator from '../components/QRCodeGenerator'
 import styles from './AdminPanel.module.css'
 
 export default function AdminPanel({ currentUser }) {
@@ -15,6 +16,12 @@ export default function AdminPanel({ currentUser }) {
           onClick={() => setActiveSection('menu')}
         >
           Menu
+        </button>
+        <button
+          className={`${styles.sectionBtn} ${activeSection === 'qr' ? styles.active : ''}`}
+          onClick={() => setActiveSection('qr')}
+        >
+          QR Codes
         </button>
         <button
           className={`${styles.sectionBtn} ${activeSection === 'accounts' ? styles.active : ''}`}
@@ -31,6 +38,7 @@ export default function AdminPanel({ currentUser }) {
       </div>
 
       {activeSection === 'menu' && <MenuManager />}
+      {activeSection === 'qr' && <QRCodeGenerator />}
       {activeSection === 'accounts' && <AdminAccounts currentUser={currentUser} />}
       {activeSection === 'storage' && <StorageManager />}
     </div>
