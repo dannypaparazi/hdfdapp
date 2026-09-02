@@ -18,8 +18,8 @@ export function generateQRCodeImageUrl(text, size = 300) {
 // Get deep link URL for user order app
 export function getUserOrderUrl(tableNumber) {
   const qrCode = generateTableQRCode(tableNumber)
-  // User order subdomain - points directly to userorder website
-  const baseUrl = 'https://userorder.hdfapp.vercel.app'
+  // User order app - separate Vercel project
+  const baseUrl = process.env.REACT_APP_USER_ORDER_URL || 'https://userorder.vercel.app'
   return `${baseUrl}?code=${encodeURIComponent(qrCode)}`
 }
 
