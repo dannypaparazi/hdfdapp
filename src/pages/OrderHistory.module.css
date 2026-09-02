@@ -273,12 +273,321 @@
   background-color: #c0392b;
 }
 
-@media (max-width: 768px) {
-  .ordersGrid {
-    grid-template-columns: 1fr;
+@media (max-width: 1024px) {
+  .container {
+    max-width: 100%;
   }
 
   .container h2 {
-    font-size: 1.4rem;
+    font-size: 1.5rem;
+  }
+
+  .tableHeading {
+    font-size: 1.1rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .calendarHeader h3 {
+    font-size: 1.2rem;
+  }
+
+  .monthBtn {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.95rem;
+  }
+
+  .calendarDay {
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .dayHeader {
+    padding: 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .lineItemPrice,
+  .lineItemTotal {
+    font-size: 0.95rem;
+    min-width: 60px;
+  }
+
+  .lineItemQty {
+    min-width: 45px;
+    font-size: 0.9rem;
+  }
+
+  .tableTotalAmount {
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    max-width: 100%;
+  }
+
+  .container h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .tableSection {
+    margin-bottom: 1.5rem;
+  }
+
+  .tableHeading {
+    font-size: 1rem;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .tableTotalSection {
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+
+  .tableTotalSection h3 {
+    font-size: 0.85rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .tableTotalAmount {
+    font-size: 1.5rem;
+  }
+
+  .calendarSection {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .calendarHeader {
+    margin-bottom: 1rem;
+    gap: 0.5rem;
+  }
+
+  .calendarHeader h3 {
+    font-size: 1rem;
+    min-width: 120px;
+  }
+
+  .monthBtn {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.9rem;
+  }
+
+  .calendar {
+    gap: 0.4rem;
+  }
+
+  .dayHeader {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .calendarDay {
+    padding: 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .selectedDateInfo {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .selectedDateInfo h3 {
+    font-size: 1rem;
+  }
+
+  .emptyState {
+    padding: 1.5rem;
+    font-size: 0.95rem;
+  }
+
+  .ordersList {
+    gap: 0.4rem;
+  }
+
+  .orderLineItem {
+    padding: 0.6rem;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .lineItemPhoto {
+    width: 60px;
+    height: 60px;
+  }
+
+  .itemNameRow {
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .itemName {
+    font-size: 0.9rem;
+  }
+
+  .lineItemDescription {
+    font-size: 0.75rem;
+  }
+
+  .lineItemPrice {
+    font-size: 0.9rem;
+    min-width: 55px;
+  }
+
+  .lineItemQty {
+    min-width: 40px;
+    font-size: 0.85rem;
+  }
+
+  .lineItemTotal {
+    font-size: 0.9rem;
+    min-width: 55px;
+  }
+
+  .deleteLineBtn {
+    min-width: 40px;
+    height: 40px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    max-width: 100%;
+  }
+
+  .container h2 {
+    font-size: 1.05rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .tableSection {
+    margin-bottom: 1rem;
+  }
+
+  .tableHeading {
+    font-size: 0.95rem;
+    padding: 0.4rem 0.6rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .tableTotalSection {
+    padding: 0.75rem;
+    margin-top: 0.75rem;
+  }
+
+  .tableTotalSection h3 {
+    font-size: 0.8rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .tableTotalAmount {
+    font-size: 1.3rem;
+  }
+
+  .calendarSection {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .calendarHeader {
+    margin-bottom: 0.75rem;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+  }
+
+  .calendarHeader h3 {
+    font-size: 0.95rem;
+    min-width: 100px;
+    flex: 1;
+    text-align: center;
+  }
+
+  .monthBtn {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.85rem;
+    min-width: 30px;
+  }
+
+  .calendar {
+    gap: 0.3rem;
+  }
+
+  .dayHeader {
+    padding: 0.4rem;
+    font-size: 0.7rem;
+  }
+
+  .calendarDay {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .selectedDateInfo {
+    padding: 0.6rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .selectedDateInfo h3 {
+    font-size: 0.9rem;
+  }
+
+  .emptyState {
+    padding: 1rem;
+    font-size: 0.85rem;
+  }
+
+  .ordersList {
+    gap: 0.3rem;
+  }
+
+  .orderLineItem {
+    padding: 0.5rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .lineItemPhoto {
+    width: 50px;
+    height: 50px;
+  }
+
+  .itemNameRow {
+    gap: 0.3rem;
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .itemName {
+    font-size: 0.85rem;
+  }
+
+  .lineItemDescription {
+    font-size: 0.7rem;
+  }
+
+  .lineItemPrice {
+    font-size: 0.85rem;
+    min-width: 50px;
+  }
+
+  .lineItemQty {
+    min-width: 35px;
+    font-size: 0.8rem;
+  }
+
+  .lineItemTotal {
+    font-size: 0.85rem;
+    min-width: 50px;
+  }
+
+  .deleteLineBtn {
+    min-width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
+    padding: 0;
   }
 }

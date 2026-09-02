@@ -52,6 +52,29 @@
   color: #2c3e50;
 }
 
+.servedSection {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #ecf0f1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.servedSection h2 {
+  margin-top: 0;
+  color: #27ae60;
+}
+
+.orderItem.served {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+}
+
+.orderItem.served .itemName {
+  color: #27ae60;
+}
+
 .ordersList {
   display: flex;
   flex-direction: column;
@@ -170,6 +193,28 @@
   font-weight: 600;
   color: #2c3e50;
   font-size: 1rem;
+}
+
+.servedBtn {
+  padding: 0.5rem 0.75rem;
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+  min-width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.servedBtn:hover {
+  background-color: #229954;
 }
 
 .deleteBtn {
@@ -305,6 +350,7 @@
 .lineItemContent {
   flex: 1;
   min-width: 0;
+  margin-right: auto;
 }
 
 .lineItemName {
@@ -436,30 +482,418 @@
   background-color: #c0392b;
 }
 
+@media (max-width: 1024px) {
+  .tableHeader h3 {
+    font-size: 1.3rem;
+  }
+
+  .totalAmount {
+    font-size: 2.2rem;
+  }
+
+  .checkoutBtn {
+    padding: 0.7rem 1.8rem;
+    font-size: 0.95rem;
+  }
+
+  .lineItemPrice {
+    font-size: 1rem;
+    min-width: 60px;
+  }
+}
+
 @media (max-width: 768px) {
-  .menuGrid {
-    grid-template-columns: 1fr;
+  .container {
+    max-width: 100%;
+  }
+
+  .tableHeader {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .tableHeader h3 {
+    font-size: 1.1rem;
+  }
+
+  .ordersSection {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .servedSection {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .servedSection h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .ordersSection h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .ordersList {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
   }
 
   .orderItem {
     flex-wrap: wrap;
+    padding: 0.75rem;
+    gap: 0.75rem;
   }
 
-  .quantitySelector {
-    flex-direction: column;
+  .itemPhoto {
+    width: 60px;
+    height: 60px;
+  }
+
+  .itemDetails {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .itemName {
+    font-size: 0.9rem;
+  }
+
+  .itemDescription {
+    font-size: 0.75rem;
+  }
+
+  .itemPrice {
+    font-size: 0.85rem;
+  }
+
+  .quantitySection {
     width: 100%;
+    justify-content: space-between;
+    gap: 0.5rem;
   }
 
-  .menuQuantitySelect,
-  .addBtn {
+  .quantityBtn {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+
+  .quantityDisplay {
+    min-width: 35px;
+    font-size: 0.9rem;
+  }
+
+  .servedBtn {
+    min-width: 40px;
+    height: 40px;
+    font-size: 0.9rem;
+  }
+
+  .deleteBtn {
+    min-width: 40px;
+    height: 40px;
+    font-size: 0.9rem;
+  }
+
+  .totalSection {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+
+  .totalSection h3 {
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .totalAmount {
+    font-size: 2rem;
+  }
+
+  .checkoutBtn {
+    padding: 0.6rem 1.5rem;
+    font-size: 0.9rem;
+    min-width: 130px;
+  }
+
+  .menuSection {
+    padding: 1rem;
+  }
+
+  .menuSection h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .menuList {
+    gap: 0.4rem;
+  }
+
+  .menuLineItem {
+    padding: 0.75rem;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .lineItemPhoto {
+    width: 60px;
+    height: 60px;
+  }
+
+  .lineItemName {
+    font-size: 0.9rem;
+  }
+
+  .lineItemDescription {
+    font-size: 0.75rem;
+  }
+
+  .lineItemPrice {
+    font-size: 0.95rem;
+    min-width: 55px;
+    margin-left: auto;
+    text-align: right;
+  }
+
+  .lineItemQuantity {
+    flex-shrink: 1;
+  }
+
+  .quantitySelectorLine {
+    gap: 0.3rem;
+  }
+
+  .lineQuantitySelect {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.8rem;
+    min-width: 55px;
+  }
+
+  .addLineBtn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  .customQuantityInputLine {
+    gap: 0.3rem;
+  }
+
+  .customQuantityInputLine input {
+    width: 55px;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .confirmBtn,
+  .cancelBtn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .message {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    max-width: 100%;
+  }
+
+  .tableHeader {
+    padding: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .tableHeader h3 {
+    font-size: 1rem;
+  }
+
+  .ordersSection {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .ordersSection h2 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .servedSection {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .servedSection h2 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .ordersList {
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .orderItem {
+    flex-wrap: wrap;
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .itemPhoto {
+    width: 50px;
+    height: 50px;
+  }
+
+  .itemDetails {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .itemName {
+    font-size: 0.85rem;
+  }
+
+  .itemDescription {
+    font-size: 0.7rem;
+  }
+
+  .itemPrice {
+    font-size: 0.8rem;
+  }
+
+  .quantitySection {
     width: 100%;
+    justify-content: space-between;
+    gap: 0.3rem;
   }
 
-  .customQuantityInput {
-    flex-direction: column;
+  .quantityBtn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+    padding: 0;
   }
 
-  .customQuantityInput input {
-    width: 100%;
+  .quantityDisplay {
+    min-width: 30px;
+    font-size: 0.8rem;
+  }
+
+  .servedBtn {
+    min-width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
+  }
+
+  .deleteBtn {
+    min-width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
+  }
+
+  .totalSection {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .totalSection h3 {
+    font-size: 0.8rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .totalAmount {
+    font-size: 1.75rem;
+  }
+
+  .checkoutBtn {
+    padding: 0.5rem 1.2rem;
+    font-size: 0.85rem;
+    min-width: 120px;
+  }
+
+  .menuSection {
+    padding: 0.75rem;
+  }
+
+  .menuSection h2 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .empty {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .menuList {
+    gap: 0.3rem;
+  }
+
+  .menuLineItem {
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .lineItemPhoto {
+    width: 50px;
+    height: 50px;
+  }
+
+  .lineItemName {
+    font-size: 0.85rem;
+  }
+
+  .lineItemDescription {
+    font-size: 0.7rem;
+  }
+
+  .lineItemPrice {
+    font-size: 0.9rem;
+    min-width: 50px;
+    margin-left: auto;
+    text-align: right;
+  }
+
+  .quantitySelectorLine {
+    gap: 0.25rem;
+  }
+
+  .lineQuantitySelect {
+    padding: 0.35rem 0.4rem;
+    font-size: 0.75rem;
+    min-width: 50px;
+  }
+
+  .addLineBtn {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.75rem;
+  }
+
+  .customQuantityInputLine {
+    gap: 0.25rem;
+  }
+
+  .customQuantityInputLine input {
+    width: 50px;
+    padding: 0.35rem 0.4rem;
+    font-size: 0.75rem;
+  }
+
+  .confirmBtn,
+  .cancelBtn {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.75rem;
+    min-width: 30px;
+  }
+
+  .message {
+    padding: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.8rem;
   }
 }

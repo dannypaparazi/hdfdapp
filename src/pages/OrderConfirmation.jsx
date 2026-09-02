@@ -6,6 +6,7 @@ import styles from './OrderConfirmation.module.css'
 export default function OrderConfirmation({ table }) {
   const [menuItems, setMenuItems] = useState([])
   const [orders, setOrders] = useState([])
+  const [servedItems, setServedItems] = useState(new Set())
   const [selectedQuantities, setSelectedQuantities] = useState({})
   const [customQuantityId, setCustomQuantityId] = useState(null)
   const [customQuantityValue, setCustomQuantityValue] = useState('')
@@ -98,6 +99,23 @@ export default function OrderConfirmation({ table }) {
   const handleDeleteOrder = (orderId) => {
     deleteOrder(orderId)
     setOrders(getOrders(table))
+    setServedItems(prev => {
+      const updated = new Set(prev)
+      updated.delete(orderId)
+      return updated
+    })
+  }
+
+  const handleMarkServed = (orderId) => {
+    setServedItems(prev => {
+      const updated = new Set(prev)
+      if (updated.has(orderId)) {
+        updated.delete(orderId)
+      } else {
+        updated.add(orderId)
+      }
+      return updated
+    })
   }
 
   const handleCheckout = () => {
@@ -112,6 +130,8 @@ export default function OrderConfirmation({ table }) {
     setTimeout(() => setMessage({ type: '', text: '' }), 3000)
   }
 
+  const currentOrderItems = orders.filter(order => !servedItems.has(order.id))
+  const servedOrderItems = orders.filter(order => servedItems.has(order.id))
   const totalAmount = orders.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
 
   return (
@@ -127,7 +147,7 @@ export default function OrderConfirmation({ table }) {
         <div className={styles.ordersSection}>
           <h2>Current Order</h2>
           <div className={styles.ordersList}>
-            {orders.map(order => (
+            {orders.filter(order => !servedItems.has(order.id)).map(order => (
               <div key={order.id} className={styles.orderItem}>
                 {order.photo && (
                   <div className={styles.itemPhoto}>
@@ -163,6 +183,13 @@ export default function OrderConfirmation({ table }) {
                   </button>
                 </div>
                 <button
+                  className={styles.servedBtn}
+                  onClick={() => handleMarkServed(order.id)}
+                  title="Mark as served"
+                >
+                  ✓
+                </button>
+                <button
                   className={styles.deleteBtn}
                   onClick={() => handleDeleteOrder(order.id)}
                   title="Delete item"
@@ -178,6 +205,49 @@ export default function OrderConfirmation({ table }) {
             <button className={styles.checkoutBtn} onClick={handleCheckout}>
               Checkout
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Served Items */}
+      {servedOrderItems.length > 0 && (
+        <div className={styles.servedSection}>
+          <h2>Served Items</h2>
+          <div className={styles.ordersList}>
+            {servedOrderItems.map(order => (
+              <div key={order.id} className={`${styles.orderItem} ${styles.served}`}>
+                {order.photo && (
+                  <div className={styles.itemPhoto}>
+                    <img src={order.photo} alt={order.itemName} />
+                  </div>
+                )}
+                <div className={styles.itemDetails}>
+                  <div className={styles.itemName}>{order.itemName}</div>
+                  {order.description && (
+                    <div className={styles.itemDescription}>{order.description}</div>
+                  )}
+                  {order.unitPrice > 0 && (
+                    <div className={styles.itemPrice}>
+                      ${order.unitPrice.toFixed(2)} x {order.quantity} = ${(order.unitPrice * order.quantity).toFixed(2)}
+                    </div>
+                  )}
+                </div>
+                <button
+                  className={styles.servedBtn}
+                  onClick={() => handleMarkServed(order.id)}
+                  title="Mark as not served"
+                >
+                  ✓
+                </button>
+                <button
+                  className={styles.deleteBtn}
+                  onClick={() => handleDeleteOrder(order.id)}
+                  title="Delete item"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
           </div>
         </div>
       )}
