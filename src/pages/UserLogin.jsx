@@ -59,6 +59,7 @@ export default function UserLogin({ onLogin }) {
         <div className={styles.info}>
           <p>📱 Scan the QR code on your table to get started</p>
           <p>🔒 Your order will be tied to your table</p>
+          <p>🌐 userorder.hdfapp.vercel.app</p>
         </div>
       </div>
     </div>
