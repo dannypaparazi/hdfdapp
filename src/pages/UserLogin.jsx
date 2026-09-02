@@ -1,9 +1,25 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import styles from './UserLogin.module.css'
 
 export default function UserLogin({ onLogin }) {
   const [qrCode, setQrCode] = useState('')
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const code = params.get('code')
+    if (code) {
+      setQrCode(code)
+      // Auto-submit if code is valid
+      const match = code.match(/^table_(\d+(?:-\d+)?)$/i)
+      if (match) {
+        setTimeout(() => {
+          const tableId = match[1]
+          onLogin(parseInt(tableId.split('-')[0]))
+        }, 100)
+      }
+    }
+  }, [])
 
   const handleSubmit = (e) => {
     e.preventDefault()

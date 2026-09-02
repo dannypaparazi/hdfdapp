@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { generateTableQRCode, generateQRCodeImageUrl } from '../utils/qrcode'
+import { generateQRCodeImageUrl, getUserOrderUrl } from '../utils/qrcode'
 import styles from './QRCodeGenerator.module.css'
 
 export default function QRCodeGenerator() {
@@ -15,11 +15,11 @@ export default function QRCodeGenerator() {
       setQRCodes(newQRCodes)
     } else {
       updated.add(tableNum)
-      const qrText = generateTableQRCode(tableNum)
-      const qrImageUrl = generateQRCodeImageUrl(qrText, 400)
+      const qrUrl = getUserOrderUrl(tableNum)
+      const qrImageUrl = generateQRCodeImageUrl(qrUrl, 400)
       setQRCodes(prev => ({
         ...prev,
-        [tableNum]: { text: qrText, imageUrl: qrImageUrl }
+        [tableNum]: { text: `table_${tableNum}`, imageUrl: qrImageUrl }
       }))
     }
     setSelectedTables(updated)
@@ -30,10 +30,10 @@ export default function QRCodeGenerator() {
     const allTables = new Set()
     for (let i = 1; i <= 20; i++) {
       allTables.add(i)
-      const qrText = generateTableQRCode(i)
+      const qrUrl = getUserOrderUrl(i)
       allQRCodes[i] = {
-        text: qrText,
-        imageUrl: generateQRCodeImageUrl(qrText, 400)
+        text: `table_${i}`,
+        imageUrl: generateQRCodeImageUrl(qrUrl, 400)
       }
     }
     setSelectedTables(allTables)
