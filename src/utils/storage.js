@@ -280,8 +280,13 @@ export async function updateOrderStatus(orderId, status) {
 // Fetch orders from Firebase
 export async function getOrdersFromServer(table = null) {
   try {
-    const orders = await getOrdersFromFirebase(table)
-    return orders
+    // Get all orders from Firebase and filter client-side
+    const allOrders = await getOrdersFromFirebase()
+
+    if (table !== null && table !== undefined) {
+      return allOrders.filter(order => order.table === table || order.table === String(table))
+    }
+    return allOrders
   } catch (error) {
     console.error('Error fetching orders from server:', error)
     return getOrders(table)

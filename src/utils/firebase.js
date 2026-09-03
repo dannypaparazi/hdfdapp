@@ -56,14 +56,9 @@ export async function deleteItemFromFirebase(itemId) {
 }
 
 // Orders
-export async function getOrdersFromFirebase(table = null) {
+export async function getOrdersFromFirebase() {
   try {
-    let q
-    if (table !== null && table !== undefined) {
-      q = query(collection(db, ORDERS_COLLECTION), where('table', '==', table))
-    } else {
-      q = query(collection(db, ORDERS_COLLECTION))
-    }
+    const q = query(collection(db, ORDERS_COLLECTION))
     const querySnapshot = await getDocs(q)
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
