@@ -99,7 +99,10 @@ export default function UserOrder({ table, onLogout }) {
             Table {getFormattedTableName(table)}
           </div>
         </div>
-        <button className={styles.logoutBtn} onClick={onLogout}>
+        <button className={styles.logoutBtn} onClick={() => {
+          console.log('Exit clicked')
+          onLogout()
+        }}>
           Exit
         </button>
       </div>
