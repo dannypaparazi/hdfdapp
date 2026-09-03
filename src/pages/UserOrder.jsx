@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getItems, getItemsFromServer, addOrder, getOrders } from '../utils/storage'
+import { getItems, getItemsFromServer, addOrder, getOrders, getOrdersFromServer } from '../utils/storage'
 import { getFormattedTableName } from '../utils/tableCounter'
 import styles from './UserOrder.module.css'
 
@@ -8,11 +8,12 @@ export default function UserOrder({ table, onLogout }) {
   const [orders, setOrders] = useState([])
   const [selectedQuantities, setSelectedQuantities] = useState({})
   const [message, setMessage] = useState({ type: '', text: '' })
+  const [servedNotifications, setServedNotifications] = useState(new Set())
   const [customQtyId, setCustomQtyId] = useState(null)
   const [customQtyValue, setCustomQtyValue] = useState('')
 
   useEffect(() => {
-    const fetchMenuItems = async () => {
+    const fetchData = async () => {
       try {
         const items = await getItemsFromServer()
         setMenuItems(items)
@@ -20,19 +21,36 @@ export default function UserOrder({ table, onLogout }) {
         console.error('Failed to fetch menu from server:', error)
         setMenuItems(getItems())
       }
+
+      try {
+        const fetchedOrders = await getOrdersFromServer(table)
+
+        // Check for status changes and show notifications
+        fetchedOrders.forEach(order => {
+          if (order.status === 'served' && !servedNotifications.has(order.id)) {
+            setMessage({ type: 'success', text: `✅ ${order.itemName} is ready!` })
+            setServedNotifications(prev => new Set(prev).add(order.id))
+            setTimeout(() => setMessage({ type: '', text: '' }), 4000)
+          } else if (order.status === 'unable_to_serve' && !servedNotifications.has(order.id)) {
+            setMessage({ type: 'error', text: `❌ ${order.itemName} is not available` })
+            setServedNotifications(prev => new Set(prev).add(order.id))
+            setTimeout(() => setMessage({ type: '', text: '' }), 4000)
+          }
+        })
+
+        setOrders(fetchedOrders)
+      } catch (error) {
+        console.error('Failed to fetch orders:', error)
+        setOrders(getOrders(table))
+      }
     }
 
-    fetchMenuItems()
-    setOrders(getOrders(table))
+    fetchData()
 
-    // Poll for updates every 5 seconds
-    const interval = setInterval(() => {
-      fetchMenuItems()
-      setOrders(getOrders(table))
-    }, 5000)
-
+    // Poll for updates every 3 seconds
+    const interval = setInterval(fetchData, 3000)
     return () => clearInterval(interval)
-  }, [table])
+  }, [table, servedNotifications])
 
   const handleQuantityChange = (itemId, value) => {
     if (value === 'other') {
@@ -124,8 +142,8 @@ export default function UserOrder({ table, onLogout }) {
         <div className={styles.orderItemsList}>
           <h3>Your Order</h3>
           <div className={styles.itemsTable}>
-            {orders.map(order => (
-              <div key={order.id} className={styles.orderItemRow}>
+            {orders.filter(o => o.status !== 'served').map(order => (
+              <div key={order.id} className={`${styles.orderItemRow} ${order.status === 'unable_to_serve' ? styles.unavailable : ''}`}>
                 <div className={styles.itemDetails}>
                   <div className={styles.itemName}>{order.itemName}</div>
                   <div className={styles.itemMeta}>
@@ -138,6 +156,28 @@ export default function UserOrder({ table, onLogout }) {
               </div>
             ))}
           </div>
+
+          {/* Served Items */}
+          {orders.filter(o => o.status === 'served').length > 0 && (
+            <div className={styles.servedSection}>
+              <h4>✅ Ready to Pick Up</h4>
+              <div className={styles.itemsTable}>
+                {orders.filter(o => o.status === 'served').map(order => (
+                  <div key={order.id} className={`${styles.orderItemRow} ${styles.served}`}>
+                    <div className={styles.itemDetails}>
+                      <div className={styles.itemName}>{order.itemName}</div>
+                      <div className={styles.itemMeta}>
+                        Qty: {order.quantity}
+                      </div>
+                    </div>
+                    <div className={styles.itemAmount}>
+                      ✓
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { addOrder, getOrders, deleteOrder, getItems, completeOrders, getOrdersFromServer, getItemsFromServer } from '../utils/storage'
+import { addOrder, getOrders, deleteOrder, getItems, completeOrders, getOrdersFromServer, getItemsFromServer, updateOrderStatus } from '../utils/storage'
 import { getFormattedTableName, incrementTableCounter } from '../utils/tableCounter'
 import styles from './OrderConfirmation.module.css'
 
@@ -144,16 +144,22 @@ export default function OrderConfirmation({ table }) {
     }
   }
 
-  const handleMarkServed = (orderId) => {
-    setServedItems(prev => {
-      const updated = new Set(prev)
-      if (updated.has(orderId)) {
-        updated.delete(orderId)
-      } else {
-        updated.add(orderId)
-      }
-      return updated
-    })
+  const handleMarkServed = async (orderId) => {
+    try {
+      setServedItems(prev => {
+        const updated = new Set(prev)
+        if (updated.has(orderId)) {
+          updated.delete(orderId)
+          updateOrderStatus(orderId, 'pending').catch(e => console.error('Error updating status:', e))
+        } else {
+          updated.add(orderId)
+          updateOrderStatus(orderId, 'served').catch(e => console.error('Error updating status:', e))
+        }
+        return updated
+      })
+    } catch (error) {
+      console.error('Error marking served:', error)
+    }
   }
 
   const handleCheckout = () => {

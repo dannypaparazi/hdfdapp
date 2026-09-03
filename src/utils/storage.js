@@ -1,6 +1,6 @@
 import { addArchivedOrder, getArchivedOrders, clearArchivedOrders, getArchiveStats } from './indexeddb'
 import { getFormattedTableName } from './tableCounter'
-import { getItemsFromFirebase, addItemToFirebase, deleteItemFromFirebase, getOrdersFromFirebase, addOrderToFirebase, deleteOrderFromFirebase } from './firebase'
+import { getItemsFromFirebase, addItemToFirebase, deleteItemFromFirebase, getOrdersFromFirebase, addOrderToFirebase, deleteOrderFromFirebase, updateOrderStatusInFirebase } from './firebase'
 
 const ORDERS_KEY = 'hotpot_orders'
 const ITEMS_KEY = 'hotpot_items'
@@ -124,6 +124,8 @@ export async function addOrder(order, table) {
       table: table,
       tableSession: getFormattedTableName(table),
       id: Date.now().toString(),
+      status: 'pending',
+      createdAt: new Date().toISOString(),
     }
     orders.push(newOrder)
     localStorage.setItem(ORDERS_KEY, JSON.stringify(orders))
@@ -248,6 +250,29 @@ export async function deleteItem(id) {
     }
   } catch (error) {
     console.error('Error deleting item:', error)
+    throw error
+  }
+}
+
+// Update order status
+export async function updateOrderStatus(orderId, status) {
+  try {
+    const orders = getOrders(undefined, true)
+    const order = orders.find(o => o.id === orderId)
+    if (order) {
+      order.status = status
+      order.statusUpdatedAt = new Date().toISOString()
+      localStorage.setItem(ORDERS_KEY, JSON.stringify(orders))
+    }
+
+    // Also update in Firebase
+    try {
+      await updateOrderStatusInFirebase(orderId, status)
+    } catch (fbError) {
+      console.warn('Firebase status update failed, but local update succeeded:', fbError)
+    }
+  } catch (error) {
+    console.error('Error updating order status:', error)
     throw error
   }
 }
