@@ -1,5 +1,6 @@
 import { addArchivedOrder, getArchivedOrders, clearArchivedOrders, getArchiveStats } from './indexeddb'
 import { getFormattedTableName } from './tableCounter'
+import { getItemsFromFirebase, addItemToFirebase, deleteItemFromFirebase } from './firebase'
 
 const ORDERS_KEY = 'hotpot_orders'
 const ITEMS_KEY = 'hotpot_items'
@@ -163,9 +164,18 @@ export function completeOrders(table) {
   }
 }
 
-// Items functions (for admin menu management)
+// Items functions (Firebase-backed menu management)
+let itemsCache = null
+let cacheTimestamp = 0
+const CACHE_DURATION = 5000 // 5 seconds
+
 export function getItems() {
   try {
+    // Return cached items if fresh
+    if (itemsCache && Date.now() - cacheTimestamp < CACHE_DURATION) {
+      return itemsCache
+    }
+    // Fallback to localStorage if cache is stale (while fetching from Firebase)
     const items = localStorage.getItem(ITEMS_KEY)
     return items ? JSON.parse(items) : []
   } catch (error) {
@@ -174,31 +184,62 @@ export function getItems() {
   }
 }
 
-export function addItem(item) {
+export async function getItemsFromServer() {
   try {
-    const items = getItems()
-    const newItem = {
-      ...item,
-      id: Date.now().toString(),
-    }
-    items.push(newItem)
+    const items = await getItemsFromFirebase()
+    itemsCache = items
+    cacheTimestamp = Date.now()
+    // Update localStorage backup
     localStorage.setItem(ITEMS_KEY, JSON.stringify(items))
-    return newItem
+    return items
   } catch (error) {
-    console.error('Error adding item:', error)
-    return null
+    console.error('Error fetching items from server:', error)
+    // Fallback to cached items
+    return getItems()
   }
 }
 
-export function deleteItem(id) {
+export async function addItem(item) {
   try {
-    const items = getItems()
-    const filtered = items.filter(item => item.id !== id)
-    localStorage.setItem(ITEMS_KEY, JSON.stringify(filtered))
+    const newItem = {
+      ...item,
+      createdAt: new Date().toISOString(),
+    }
+    const id = await addItemToFirebase(newItem)
+    const completeItem = { id, ...newItem }
+
+    // Update cache
+    itemsCache = itemsCache ? [...itemsCache, completeItem] : [completeItem]
+    cacheTimestamp = Date.now()
+    localStorage.setItem(ITEMS_KEY, JSON.stringify(itemsCache))
+
+    return completeItem
   } catch (error) {
-    console.error('Error deleting item:', error)
+    console.error('Error adding item:', error)
+    throw error
   }
 }
+
+export async function deleteItem(id) {
+  try {
+    await deleteItemFromFirebase(id)
+
+    // Update cache
+    if (itemsCache) {
+      itemsCache = itemsCache.filter(item => item.id !== id)
+      cacheTimestamp = Date.now()
+      localStorage.setItem(ITEMS_KEY, JSON.stringify(itemsCache))
+    }
+  } catch (error) {
+    console.error('Error deleting item:', error)
+    throw error
+  }
+}
+
+// Initialize cache on load
+getItemsFromServer().catch(error => {
+  console.log('Initial Firebase sync failed, using localStorage:', error)
+})
 
 export function cleanupCompletedOrders() {
   try {

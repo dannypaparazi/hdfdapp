@@ -42,7 +42,7 @@ export default function MenuManager() {
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setMessage({ type: '', text: '' })
 
@@ -51,24 +51,29 @@ export default function MenuManager() {
       return
     }
 
-    addItem({
-      name: formData.name,
-      cost: parseFloat(formData.cost),
-      description: formData.description,
-      photo: formData.photo,
-    })
+    try {
+      await addItem({
+        name: formData.name,
+        cost: parseFloat(formData.cost),
+        description: formData.description,
+        photo: formData.photo,
+      })
 
-    setMessage({ type: 'success', text: `Item "${formData.name}" ${editingId ? 'updated' : 'added'} successfully` })
-    setItems(getItems())
-    setFormData({
-      name: '',
-      cost: '',
-      description: '',
-      photo: null,
-      photoPreview: null,
-    })
-    setShowForm(false)
-    setEditingId(null)
+      setMessage({ type: 'success', text: `Item "${formData.name}" added successfully` })
+      setItems(getItems())
+      setFormData({
+        name: '',
+        cost: '',
+        description: '',
+        photo: null,
+        photoPreview: null,
+      })
+      setShowForm(false)
+      setEditingId(null)
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to add item' })
+      console.error(error)
+    }
   }
 
   const handleEdit = (item) => {
@@ -83,11 +88,16 @@ export default function MenuManager() {
     setShowForm(true)
   }
 
-  const handleDelete = (id, name) => {
+  const handleDelete = async (id, name) => {
     if (confirm(`Delete "${name}"?`)) {
-      deleteItem(id)
-      setItems(getItems())
-      setMessage({ type: 'success', text: `Item deleted` })
+      try {
+        await deleteItem(id)
+        setItems(getItems())
+        setMessage({ type: 'success', text: `Item deleted` })
+      } catch (error) {
+        setMessage({ type: 'error', text: 'Failed to delete item' })
+        console.error(error)
+      }
     }
   }
 

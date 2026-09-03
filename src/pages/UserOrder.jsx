@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getItems, addOrder, getOrders } from '../utils/storage'
+import { getItems, getItemsFromServer, addOrder, getOrders } from '../utils/storage'
 import { getFormattedTableName } from '../utils/tableCounter'
 import styles from './UserOrder.module.css'
 
@@ -12,8 +12,26 @@ export default function UserOrder({ table, onLogout }) {
   const [customQtyValue, setCustomQtyValue] = useState('')
 
   useEffect(() => {
-    setMenuItems(getItems())
+    const fetchMenuItems = async () => {
+      try {
+        const items = await getItemsFromServer()
+        setMenuItems(items)
+      } catch (error) {
+        console.error('Failed to fetch menu from server:', error)
+        setMenuItems(getItems())
+      }
+    }
+
+    fetchMenuItems()
     setOrders(getOrders(table))
+
+    // Poll for updates every 5 seconds
+    const interval = setInterval(() => {
+      fetchMenuItems()
+      setOrders(getOrders(table))
+    }, 5000)
+
+    return () => clearInterval(interval)
   }, [table])
 
   const handleQuantityChange = (itemId, value) => {
