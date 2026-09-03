@@ -1,6 +1,6 @@
 import { addArchivedOrder, getArchivedOrders, clearArchivedOrders, getArchiveStats } from './indexeddb'
 import { getFormattedTableName } from './tableCounter'
-import { getItemsFromFirebase, addItemToFirebase, deleteItemFromFirebase } from './firebase'
+import { getItemsFromFirebase, addItemToFirebase, deleteItemFromFirebase, getOrdersFromFirebase, addOrderToFirebase, deleteOrderFromFirebase } from './firebase'
 
 const ORDERS_KEY = 'hotpot_orders'
 const ITEMS_KEY = 'hotpot_items'
@@ -116,7 +116,7 @@ export function getOrders(table, includeCompleted = false) {
   }
 }
 
-export function addOrder(order, table) {
+export async function addOrder(order, table) {
   try {
     const orders = getOrders(undefined, true)
     const newOrder = {
@@ -127,20 +127,36 @@ export function addOrder(order, table) {
     }
     orders.push(newOrder)
     localStorage.setItem(ORDERS_KEY, JSON.stringify(orders))
+
+    // Also save to Firebase for cross-app sync
+    try {
+      await addOrderToFirebase(newOrder)
+    } catch (fbError) {
+      console.warn('Firebase order sync failed, but local save succeeded:', fbError)
+    }
+
     return newOrder
   } catch (error) {
     console.error('Error adding order:', error)
-    return null
+    throw error
   }
 }
 
-export function deleteOrder(id) {
+export async function deleteOrder(id) {
   try {
     const orders = getOrders(undefined, true)
     const filtered = orders.filter(order => order.id !== id)
     localStorage.setItem(ORDERS_KEY, JSON.stringify(filtered))
+
+    // Also delete from Firebase
+    try {
+      await deleteOrderFromFirebase(id)
+    } catch (fbError) {
+      console.warn('Firebase order delete failed, but local delete succeeded:', fbError)
+    }
   } catch (error) {
     console.error('Error deleting order:', error)
+    throw error
   }
 }
 
@@ -233,6 +249,17 @@ export async function deleteItem(id) {
   } catch (error) {
     console.error('Error deleting item:', error)
     throw error
+  }
+}
+
+// Fetch orders from Firebase
+export async function getOrdersFromServer(table = null) {
+  try {
+    const orders = await getOrdersFromFirebase(table)
+    return orders
+  } catch (error) {
+    console.error('Error fetching orders from server:', error)
+    return getOrders(table)
   }
 }
 

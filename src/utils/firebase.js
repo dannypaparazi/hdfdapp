@@ -14,9 +14,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 export const db = getFirestore(app)
 
-// Menu items collection
+// Collections
 const ITEMS_COLLECTION = 'hotpot_items'
+const ORDERS_COLLECTION = 'hotpot_orders'
 
+// Menu Items
 export async function getItemsFromFirebase() {
   try {
     const q = query(collection(db, ITEMS_COLLECTION))
@@ -49,6 +51,48 @@ export async function deleteItemFromFirebase(itemId) {
     await deleteDoc(doc(db, ITEMS_COLLECTION, itemId))
   } catch (error) {
     console.error('Error deleting item from Firebase:', error)
+    throw error
+  }
+}
+
+// Orders
+export async function getOrdersFromFirebase(table = null) {
+  try {
+    let q
+    if (table !== null && table !== undefined) {
+      q = query(collection(db, ORDERS_COLLECTION), where('table', '==', table))
+    } else {
+      q = query(collection(db, ORDERS_COLLECTION))
+    }
+    const querySnapshot = await getDocs(q)
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }))
+  } catch (error) {
+    console.error('Error fetching orders from Firebase:', error)
+    return []
+  }
+}
+
+export async function addOrderToFirebase(orderData) {
+  try {
+    const docRef = await addDoc(collection(db, ORDERS_COLLECTION), {
+      ...orderData,
+      createdAt: new Date().toISOString()
+    })
+    return docRef.id
+  } catch (error) {
+    console.error('Error adding order to Firebase:', error)
+    throw error
+  }
+}
+
+export async function deleteOrderFromFirebase(orderId) {
+  try {
+    await deleteDoc(doc(db, ORDERS_COLLECTION, orderId))
+  } catch (error) {
+    console.error('Error deleting order from Firebase:', error)
     throw error
   }
 }

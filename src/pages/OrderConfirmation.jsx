@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { addOrder, getOrders, deleteOrder, getItems, completeOrders } from '../utils/storage'
+import { addOrder, getOrders, deleteOrder, getItems, completeOrders, getOrdersFromServer, getItemsFromServer } from '../utils/storage'
 import { getFormattedTableName, incrementTableCounter } from '../utils/tableCounter'
 import styles from './OrderConfirmation.module.css'
 
@@ -13,8 +13,29 @@ export default function OrderConfirmation({ table }) {
   const [message, setMessage] = useState({ type: '', text: '' })
 
   useEffect(() => {
-    setMenuItems(getItems())
-    setOrders(getOrders(table))
+    const fetchData = async () => {
+      try {
+        const items = await getItemsFromServer()
+        setMenuItems(items)
+      } catch (error) {
+        console.error('Failed to fetch items:', error)
+        setMenuItems(getItems())
+      }
+
+      try {
+        const orders = await getOrdersFromServer(table)
+        setOrders(orders)
+      } catch (error) {
+        console.error('Failed to fetch orders:', error)
+        setOrders(getOrders(table))
+      }
+    }
+
+    fetchData()
+
+    // Poll for updates every 3 seconds
+    const interval = setInterval(fetchData, 3000)
+    return () => clearInterval(interval)
   }, [table])
 
   const handleQuantityChange = (itemId, value) => {
@@ -44,7 +65,7 @@ export default function OrderConfirmation({ table }) {
     setCustomQuantityValue('')
   }
 
-  const handleAddToOrder = (item) => {
+  const handleAddToOrder = async (item) => {
     const quantity = selectedQuantities[item.id]
     if (!quantity) {
       setMessage({ type: 'error', text: 'Please select a quantity' })
@@ -56,54 +77,71 @@ export default function OrderConfirmation({ table }) {
       return
     }
 
-    console.log('🔵 ADDING ORDER - Table:', table, 'Item:', item.name, 'Qty:', quantity)
+    try {
+      console.log('🔵 ADDING ORDER - Table:', table, 'Item:', item.name, 'Qty:', quantity)
 
-    const result = addOrder({
-      itemName: item.name,
-      quantity: quantity,
-      description: item.description,
-      unitPrice: item.cost,
-      timestamp: new Date().toISOString(),
-    }, table)
-
-    console.log('🟢 ORDER ADDED - Result:', result)
-
-    setSelectedQuantities(prev => {
-      const updated = { ...prev }
-      delete updated[item.id]
-      return updated
-    })
-
-    const updatedOrders = getOrders(table)
-    console.log('🟡 FETCHING ORDERS - Table:', table, 'Found:', updatedOrders.length, 'orders', updatedOrders)
-
-    setOrders(updatedOrders)
-    console.log('🟣 STATE SET - Orders length:', updatedOrders.length)
-
-    setMessage({ type: 'success', text: `${item.name} x${quantity} added to order` })
-    setTimeout(() => setMessage({ type: '', text: '' }), 2000)
-  }
-
-  const handleQuantityChangeOrder = (orderId, newQuantity) => {
-    const order = orders.find(o => o.id === orderId)
-    if (order) {
-      deleteOrder(orderId)
-      addOrder({
-        ...order,
-        quantity: parseInt(newQuantity),
+      await addOrder({
+        itemName: item.name,
+        quantity: quantity,
+        description: item.description,
+        unitPrice: item.cost,
+        timestamp: new Date().toISOString(),
       }, table)
-      setOrders(getOrders(table))
+
+      console.log('🟢 ORDER ADDED')
+
+      setSelectedQuantities(prev => {
+        const updated = { ...prev }
+        delete updated[item.id]
+        return updated
+      })
+
+      const updatedOrders = await getOrdersFromServer(table)
+      console.log('🟡 FETCHING ORDERS - Table:', table, 'Found:', updatedOrders.length, 'orders')
+
+      setOrders(updatedOrders)
+      console.log('🟣 STATE SET - Orders length:', updatedOrders.length)
+
+      setMessage({ type: 'success', text: `${item.name} x${quantity} added to order` })
+      setTimeout(() => setMessage({ type: '', text: '' }), 2000)
+    } catch (error) {
+      console.error('Error adding order:', error)
+      setMessage({ type: 'error', text: 'Failed to add order' })
     }
   }
 
-  const handleDeleteOrder = (orderId) => {
-    deleteOrder(orderId)
-    setOrders(getOrders(table))
-    setServedItems(prev => {
-      const updated = new Set(prev)
-      updated.delete(orderId)
-      return updated
-    })
+  const handleQuantityChangeOrder = async (orderId, newQuantity) => {
+    try {
+      const order = orders.find(o => o.id === orderId)
+      if (order) {
+        await deleteOrder(orderId)
+        await addOrder({
+          ...order,
+          quantity: parseInt(newQuantity),
+        }, table)
+        const updatedOrders = await getOrdersFromServer(table)
+        setOrders(updatedOrders)
+      }
+    } catch (error) {
+      console.error('Error updating order quantity:', error)
+      setMessage({ type: 'error', text: 'Failed to update order' })
+    }
+  }
+
+  const handleDeleteOrder = async (orderId) => {
+    try {
+      await deleteOrder(orderId)
+      const updatedOrders = await getOrdersFromServer(table)
+      setOrders(updatedOrders)
+      setServedItems(prev => {
+        const updated = new Set(prev)
+        updated.delete(orderId)
+        return updated
+      })
+    } catch (error) {
+      console.error('Error deleting order:', error)
+      setMessage({ type: 'error', text: 'Failed to delete order' })
+    }
   }
 
   const handleMarkServed = (orderId) => {
