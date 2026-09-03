@@ -25,9 +25,12 @@ export default function UserOrder({ table, onLogout }) {
       try {
         const fetchedOrders = await getOrdersFromServer(table)
 
-        // Check for status changes and show notifications
+        // Track which orders changed to served status
+        const currentOrderIds = new Set(orders.map(o => o.id))
         fetchedOrders.forEach(order => {
-          if (order.status === 'served' && !servedNotifications.has(order.id)) {
+          const wasServed = orders.find(o => o.id === order.id)?.status === 'served'
+
+          if (order.status === 'served' && !wasServed && !servedNotifications.has(order.id)) {
             setMessage({ type: 'success', text: `✅ ${order.itemName} is ready!` })
             setServedNotifications(prev => new Set(prev).add(order.id))
             setTimeout(() => setMessage({ type: '', text: '' }), 4000)
