@@ -146,17 +146,15 @@ export default function OrderConfirmation({ table }) {
 
   const handleMarkServed = async (orderId) => {
     try {
-      setServedItems(prev => {
-        const updated = new Set(prev)
-        if (updated.has(orderId)) {
-          updated.delete(orderId)
-          updateOrderStatus(orderId, 'pending').catch(e => console.error('Error updating status:', e))
-        } else {
-          updated.add(orderId)
-          updateOrderStatus(orderId, 'served').catch(e => console.error('Error updating status:', e))
-        }
-        return updated
-      })
+      const updated = new Set(servedItems)
+      if (updated.has(orderId)) {
+        updated.delete(orderId)
+        await updateOrderStatus(orderId, 'pending')
+      } else {
+        updated.add(orderId)
+        await updateOrderStatus(orderId, 'served')
+      }
+      setServedItems(updated)
     } catch (error) {
       console.error('Error marking served:', error)
     }
