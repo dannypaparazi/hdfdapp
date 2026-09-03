@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, query, where, updateDoc, setDoc } from 'firebase/firestore'
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, query, where, updateDoc } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: "AIzaSyBGkvrIQ57msMQGz2Bfm7ENhC8An65Zjcc",
@@ -95,10 +95,10 @@ export async function deleteOrderFromFirebase(orderId) {
 export async function updateOrderStatusInFirebase(orderId, status) {
   try {
     const orderRef = doc(db, ORDERS_COLLECTION, orderId)
-    await setDoc(orderRef, {
+    await updateDoc(orderRef, {
       status: status,
       statusUpdatedAt: new Date().toISOString()
-    }, { merge: true })
+    })
   } catch (error) {
     console.error('Error updating order status in Firebase:', error)
     throw error
