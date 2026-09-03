@@ -116,6 +116,28 @@ export default function UserOrder({ table, onLogout }) {
         </div>
       )}
 
+      {/* Itemized Order List */}
+      {orders.length > 0 && (
+        <div className={styles.orderItemsList}>
+          <h3>Your Order</h3>
+          <div className={styles.itemsTable}>
+            {orders.map(order => (
+              <div key={order.id} className={styles.orderItemRow}>
+                <div className={styles.itemDetails}>
+                  <div className={styles.itemName}>{order.itemName}</div>
+                  <div className={styles.itemMeta}>
+                    Qty: {order.quantity} × ${order.unitPrice.toFixed(2)}
+                  </div>
+                </div>
+                <div className={styles.itemAmount}>
+                  ${(order.quantity * order.unitPrice).toFixed(2)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Message */}
       {message.text && (
         <div className={`${styles.message} ${styles[message.type]}`}>
