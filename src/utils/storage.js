@@ -257,22 +257,30 @@ export async function deleteItem(id) {
 // Update order status
 export async function updateOrderStatus(orderId, status) {
   try {
+    console.log('📌 STORAGE: updateOrderStatus called - orderId:', orderId, '| New status:', status)
+
     const orders = getOrders(undefined, true)
     const order = orders.find(o => o.id === orderId)
+    console.log('📌 STORAGE: Found local order:', order)
+
     if (order) {
       order.status = status
       order.statusUpdatedAt = new Date().toISOString()
       localStorage.setItem(ORDERS_KEY, JSON.stringify(orders))
+      console.log('📌 STORAGE: Updated localStorage')
     }
 
     // Also update in Firebase
     try {
+      console.log('📌 STORAGE: Calling updateOrderStatusInFirebase...')
       await updateOrderStatusInFirebase(orderId, status)
+      console.log('📌 STORAGE: Firebase update successful ✓')
     } catch (fbError) {
-      console.warn('Firebase status update failed, but local update succeeded:', fbError)
+      console.error('🔴 STORAGE: Firebase status update failed:', fbError)
+      throw fbError
     }
   } catch (error) {
-    console.error('Error updating order status:', error)
+    console.error('🔴 STORAGE: Error updating order status:', error)
     throw error
   }
 }
@@ -282,9 +290,12 @@ export async function getOrdersFromServer(table = null) {
   try {
     // Get all orders from Firebase and filter client-side
     const allOrders = await getOrdersFromFirebase()
+    console.log('🔵 getOrdersFromServer: Fetched', allOrders.length, 'orders from Firebase. All statuses:', allOrders.map(o => ({ id: o.id, table: o.table, status: o.status, itemName: o.itemName })))
 
     if (table !== null && table !== undefined) {
-      return allOrders.filter(order => order.table === table || order.table === String(table))
+      const filtered = allOrders.filter(order => order.table === table || order.table === String(table))
+      console.log('🔵 getOrdersFromServer: Filtering by table', table, '| Found', filtered.length, 'matching orders')
+      return filtered
     }
     return allOrders
   } catch (error) {

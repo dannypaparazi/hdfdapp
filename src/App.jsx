@@ -7,6 +7,7 @@ import Home from './pages/Home'
 import OrderConfirmation from './pages/OrderConfirmation'
 import OrderHistory from './pages/OrderHistory'
 import QuantityHistory from './pages/QuantityHistory'
+import AuditTrail from './pages/AuditTrail'
 import AdminPanel from './pages/AdminPanel'
 import styles from './App.module.css'
 
@@ -102,6 +103,12 @@ export default function App() {
           Quantity History
         </button>
         <button
+          className={`${styles.tab} ${activeTab === 'audit' ? styles.active : ''}`}
+          onClick={() => setActiveTab('audit')}
+        >
+          Audit Trail
+        </button>
+        <button
           className={`${styles.tab} ${activeTab === 'admin' ? styles.active : ''}`}
           onClick={() => setActiveTab('admin')}
         >
@@ -114,6 +121,7 @@ export default function App() {
         {activeTab === 'confirm' && selectedTable && <OrderConfirmation table={selectedTable} />}
         {activeTab === 'history' && <OrderHistory />}
         {activeTab === 'quantity' && <QuantityHistory />}
+        {activeTab === 'audit' && <AuditTrail />}
         {activeTab === 'admin' && <AdminPanel currentUser={currentUser} />}
       </main>
     </div>

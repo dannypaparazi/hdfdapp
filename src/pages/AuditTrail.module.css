@@ -1,0 +1,204 @@
+.container {
+  max-width: 1100px;
+}
+
+.container h2 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 1.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5rem;
+  background: white;
+  padding: 1.25rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.filterGroup label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #7f8c8d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filterGroup select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #bdc3c7;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #2c3e50;
+  background: white;
+  cursor: pointer;
+  min-width: 160px;
+}
+
+.summary {
+  margin-left: auto;
+  color: #7f8c8d;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.emptyState {
+  background: #ecf0f1;
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+  color: #7f8c8d;
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.tableWrapper {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
+}
+
+.auditTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.auditTable th {
+  background: #34495e;
+  color: white;
+  text-align: left;
+  padding: 0.85rem 1rem;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.auditTable td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #ecf0f1;
+  color: #2c3e50;
+  white-space: nowrap;
+}
+
+.auditTable tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.auditTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge.pending {
+  background-color: #fdebd0;
+  color: #b9770e;
+}
+
+.badge.served {
+  background-color: #d5f4e6;
+  color: #1e8449;
+}
+
+.badge.unable {
+  background-color: #fadbd8;
+  color: #c0392b;
+}
+
+.badge.completed {
+  background-color: #d6eaf8;
+  color: #2874a6;
+}
+
+@media (max-width: 1024px) {
+  .container {
+    max-width: 100%;
+  }
+
+  .container h2 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .container h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .filters {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .filterGroup select {
+    min-width: 130px;
+    font-size: 0.85rem;
+  }
+
+  .summary {
+    width: 100%;
+    margin-left: 0;
+    text-align: right;
+  }
+
+  .auditTable {
+    font-size: 0.8rem;
+  }
+
+  .auditTable th,
+  .auditTable td {
+    padding: 0.6rem 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container h2 {
+    font-size: 1.05rem;
+  }
+
+  .filters {
+    padding: 0.75rem;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filterGroup select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .summary {
+    text-align: left;
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+  }
+}

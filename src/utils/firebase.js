@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, query, where, updateDoc } from 'firebase/firestore'
+import { getFirestore, collection, getDocs, addDoc, setDoc, deleteDoc, doc, query, where, updateDoc } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: "AIzaSyBGkvrIQ57msMQGz2Bfm7ENhC8An65Zjcc",
@@ -72,11 +72,16 @@ export async function getOrdersFromFirebase() {
 
 export async function addOrderToFirebase(orderData) {
   try {
-    const docRef = await addDoc(collection(db, ORDERS_COLLECTION), {
+    // Use setDoc with the order's own id so later updateDoc/deleteDoc calls
+    // (which address documents by this same id) can actually find it.
+    // addDoc would instead generate its own random document id, orphaning
+    // every subsequent status update or delete.
+    const orderRef = doc(db, ORDERS_COLLECTION, orderData.id)
+    await setDoc(orderRef, {
       ...orderData,
       createdAt: new Date().toISOString()
     })
-    return docRef.id
+    return orderData.id
   } catch (error) {
     console.error('Error adding order to Firebase:', error)
     throw error
@@ -94,13 +99,15 @@ export async function deleteOrderFromFirebase(orderId) {
 
 export async function updateOrderStatusInFirebase(orderId, status) {
   try {
+    console.log('🔥 FIREBASE: updateDoc called - orderId:', orderId, '| New status:', status)
     const orderRef = doc(db, ORDERS_COLLECTION, orderId)
     await updateDoc(orderRef, {
       status: status,
       statusUpdatedAt: new Date().toISOString()
     })
+    console.log('🔥 FIREBASE: updateDoc successful ✓')
   } catch (error) {
-    console.error('Error updating order status in Firebase:', error)
+    console.error('🔴 FIREBASE: Error updating order status:', error)
     throw error
   }
 }

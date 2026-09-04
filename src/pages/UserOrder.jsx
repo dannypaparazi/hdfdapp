@@ -24,17 +24,21 @@ export default function UserOrder({ table, onLogout }) {
 
       try {
         const fetchedOrders = await getOrdersFromServer(table)
+        console.log('📱 USER POLL: Table:', table, '| Orders:', fetchedOrders.length, '| Details:', fetchedOrders.map(o => ({ id: o.id, itemName: o.itemName, status: o.status })))
 
         // Track which orders changed to served status
         const currentOrderIds = new Set(orders.map(o => o.id))
         fetchedOrders.forEach(order => {
           const wasServed = orders.find(o => o.id === order.id)?.status === 'served'
+          const wasUnable = orders.find(o => o.id === order.id)?.status === 'unable_to_serve'
 
           if (order.status === 'served' && !wasServed && !servedNotifications.has(order.id)) {
+            console.log('📱 USER: 🎉 STATUS CHANGED TO SERVED:', order.itemName)
             setMessage({ type: 'success', text: `✅ ${order.itemName} is ready!` })
             setServedNotifications(prev => new Set(prev).add(order.id))
             setTimeout(() => setMessage({ type: '', text: '' }), 4000)
-          } else if (order.status === 'unable_to_serve' && !servedNotifications.has(order.id)) {
+          } else if (order.status === 'unable_to_serve' && !wasUnable && !servedNotifications.has(order.id)) {
+            console.log('📱 USER: ❌ STATUS CHANGED TO UNABLE:', order.itemName)
             setMessage({ type: 'error', text: `❌ ${order.itemName} is not available` })
             setServedNotifications(prev => new Set(prev).add(order.id))
             setTimeout(() => setMessage({ type: '', text: '' }), 4000)

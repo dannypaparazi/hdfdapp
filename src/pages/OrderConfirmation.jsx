@@ -24,6 +24,7 @@ export default function OrderConfirmation({ table }) {
 
       try {
         const orders = await getOrdersFromServer(table)
+        console.log('📋 ADMIN POLL: Table:', table, '| Orders fetched:', orders.length, '| Statuses:', orders.map(o => ({ id: o.id, itemName: o.itemName, status: o.status })))
         setOrders(orders)
       } catch (error) {
         console.error('Failed to fetch orders:', error)
@@ -146,17 +147,30 @@ export default function OrderConfirmation({ table }) {
 
   const handleMarkServed = async (orderId) => {
     try {
+      console.log('🟠 ADMIN: handleMarkServed clicked - orderId:', orderId)
+      const order = orders.find(o => o.id === orderId)
+      console.log('🟠 ADMIN: Order data:', order)
+
       const updated = new Set(servedItems)
       if (updated.has(orderId)) {
         updated.delete(orderId)
+        console.log('🟠 ADMIN: Updating status to PENDING')
         await updateOrderStatus(orderId, 'pending')
       } else {
         updated.add(orderId)
+        console.log('🟠 ADMIN: Updating status to SERVED')
         await updateOrderStatus(orderId, 'served')
       }
       setServedItems(updated)
+      console.log('🟢 ADMIN: Status update sent to Firebase')
+
+      // Immediately refetch to verify
+      setTimeout(async () => {
+        const updatedOrders = await getOrdersFromServer(table)
+        console.log('🟢 ADMIN: Refetched after update - Order status now:', updatedOrders.find(o => o.id === orderId)?.status)
+      }, 500)
     } catch (error) {
-      console.error('Error marking served:', error)
+      console.error('🔴 ADMIN: Error marking served:', error)
     }
   }
 
