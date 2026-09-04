@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getOrders, deleteOrder } from '../utils/storage'
+import { getOrders, deleteOrder, getOrdersFromServer } from '../utils/storage'
 import styles from './OrderHistory.module.css'
 
 export default function OrderHistory() {
@@ -7,14 +7,24 @@ export default function OrderHistory() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [currentMonth, setCurrentMonth] = useState(new Date())
 
+  const fetchCompletedOrders = async () => {
+    try {
+      const allOrders = await getOrdersFromServer()
+      setOrders(allOrders.filter(o => o.status === 'completed'))
+    } catch (error) {
+      console.error('Failed to fetch order history:', error)
+      setOrders(getOrders(undefined, true).filter(o => o.status === 'completed'))
+    }
+  }
+
   useEffect(() => {
-    setOrders(getOrders(undefined, true))
+    fetchCompletedOrders()
   }, [])
 
-  const handleDeleteOrder = (id) => {
+  const handleDeleteOrder = async (id) => {
     if (confirm('Are you sure you want to delete this order?')) {
-      deleteOrder(id)
-      setOrders(getOrders(undefined, true))
+      await deleteOrder(id)
+      fetchCompletedOrders()
     }
   }
 
@@ -89,7 +99,7 @@ export default function OrderHistory() {
       <div className={styles.container}>
         <h2>Order History</h2>
         <div className={styles.emptyState}>
-          <p>No orders yet. Start by adding an item in the Order Confirmation tab.</p>
+          <p>No paid orders yet. Orders appear here after checkout.</p>
         </div>
       </div>
     )

@@ -170,18 +170,6 @@ export function clearAllOrders() {
   }
 }
 
-export function completeOrders(table) {
-  try {
-    const orders = getOrders(undefined, true)
-    const updated = orders.map(order =>
-      order.table === table ? { ...order, status: 'completed' } : order
-    )
-    localStorage.setItem(ORDERS_KEY, JSON.stringify(updated))
-  } catch (error) {
-    console.error('Error completing orders:', error)
-  }
-}
-
 // Items functions (Firebase-backed menu management)
 let itemsCache = null
 let cacheTimestamp = 0
