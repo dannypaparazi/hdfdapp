@@ -156,15 +156,29 @@ export default function OrderConfirmation({ table }) {
     }
   }
 
+  // Current Order -> Items Served
   const handleMarkServed = async (order) => {
     try {
-      const newStatus = order.status === 'served' ? 'pending' : 'served'
-      console.log('🟠 ADMIN: handleMarkServed clicked - orderId:', order.id, '| New status:', newStatus)
-      await updateOrderStatus(order.id, newStatus)
+      console.log('🟠 ADMIN: handleMarkServed clicked - orderId:', order.id)
+      await updateOrderStatus(order.id, 'served')
       await refreshOrders()
       console.log('🟢 ADMIN: Status update sent to Firebase')
     } catch (error) {
       console.error('🔴 ADMIN: Error marking served:', error)
+      setMessage({ type: 'error', text: 'Failed to update status' })
+    }
+  }
+
+  // Items Served -> Order History (transfers this one item individually,
+  // no need to wait for Checkout)
+  const handleTransferToHistory = async (order) => {
+    try {
+      console.log('🟠 ADMIN: handleTransferToHistory clicked - orderId:', order.id)
+      await updateOrderStatus(order.id, 'completed')
+      await refreshOrders()
+      console.log('🟢 ADMIN: Transferred to Order History')
+    } catch (error) {
+      console.error('🔴 ADMIN: Error transferring to history:', error)
       setMessage({ type: 'error', text: 'Failed to update status' })
     }
   }
@@ -259,7 +273,7 @@ export default function OrderConfirmation({ table }) {
         </div>
       )}
 
-      {/* Items Served: staged here until Checkout transfers the table to Order History */}
+      {/* Items Served: tick transfers this item to Order History individually */}
       {servedOrderItems.length > 0 && (
         <div className={styles.servedSection}>
           <h2>Items Served</h2>
@@ -284,8 +298,8 @@ export default function OrderConfirmation({ table }) {
                 </div>
                 <button
                   className={styles.servedBtn}
-                  onClick={() => handleMarkServed(order)}
-                  title="Mark as not served"
+                  onClick={() => handleTransferToHistory(order)}
+                  title="Send to Order History"
                 >
                   ✓
                 </button>
@@ -306,7 +320,10 @@ export default function OrderConfirmation({ table }) {
         </div>
       )}
 
-      {/* Order Total: everything for this table (pending + served) — Checkout transfers it all to Order History */}
+      {/* Order Total: everything still active for this table (pending + served).
+          Served items normally transfer individually via their own tick;
+          Checkout is the safety net that finalizes whatever's left and
+          starts a fresh session for the next customer. */}
       {orders.length > 0 && (
         <div className={styles.totalSection}>
           <h3>Order Total</h3>
