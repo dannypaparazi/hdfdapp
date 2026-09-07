@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { addOrder, getOrders, deleteOrder, getItems, getOrdersFromServer, getItemsFromServer, updateOrderStatus } from '../utils/storage'
 import { getFormattedTableName, incrementTableCounter } from '../utils/tableCounter'
 import styles from './OrderConfirmation.module.css'
@@ -11,14 +11,26 @@ export default function OrderConfirmation({ table }) {
   const [customQuantityId, setCustomQuantityId] = useState(null)
   const [customQuantityValue, setCustomQuantityValue] = useState('')
   const [message, setMessage] = useState({ type: '', text: '' })
+  const requestIdRef = useRef(0)
 
   // A served item is immediately transferred to Order History (it's no longer
   // "current" work for this table), so only pending items stay in the active
   // list here. checkoutTotal is the running sum of served items for the
   // table's CURRENT session only, so it resets when the table is closed out
   // and doesn't pick up abandoned pending items from a past session.
+  //
+  // The 3s poll and an action's own post-update refresh both call this
+  // independently. Without ordering, a poll fetch that started BEFORE a
+  // status write committed can resolve AFTER the action's fresh refresh and
+  // clobber the state with stale pre-write data — a served item briefly
+  // snapping back to "pending" in the UI. requestIdRef makes only the most
+  // recently *issued* fetch allowed to update state, regardless of which
+  // resolves last.
   const refreshOrders = async () => {
+    const requestId = ++requestIdRef.current
     const allOrders = await getOrdersFromServer(table)
+    if (requestId !== requestIdRef.current) return
+
     const currentSession = getFormattedTableName(table)
     const sessionOrders = allOrders.filter(order => order.tableSession === currentSession)
     const pendingOrders = sessionOrders.filter(order => !order.status || order.status === 'pending')
