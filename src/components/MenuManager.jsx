@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getItems, addItem, updateItem, deleteItem } from '../utils/storage'
+import { getItems, addItem, updateItem, deleteItem, compressImage } from '../utils/storage'
 import styles from './MenuManager.module.css'
 
 export default function MenuManager() {
@@ -31,11 +31,15 @@ export default function MenuManager() {
     const file = e.target.files[0]
     if (file) {
       const reader = new FileReader()
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
+        // Compress before storing — Firestore rejects any single field over
+        // ~1MB, and an uncompressed photo (especially a screenshot) easily
+        // exceeds that.
+        const compressed = await compressImage(event.target.result)
         setFormData(prev => ({
           ...prev,
-          photo: event.target.result,
-          photoPreview: event.target.result,
+          photo: compressed,
+          photoPreview: compressed,
         }))
       }
       reader.readAsDataURL(file)
@@ -78,7 +82,14 @@ export default function MenuManager() {
       setShowForm(false)
       setEditingId(null)
     } catch (error) {
-      setMessage({ type: 'error', text: editingId ? 'Failed to update item' : 'Failed to add item' })
+      const action = editingId ? 'update' : 'add'
+      const isTooLarge = error?.message?.includes('longer than')
+      setMessage({
+        type: 'error',
+        text: isTooLarge
+          ? `Failed to ${action} item: photo is too large. Try a smaller image.`
+          : `Failed to ${action} item`,
+      })
       console.error(error)
     }
   }
