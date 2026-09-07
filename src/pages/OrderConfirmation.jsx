@@ -6,38 +6,33 @@ import styles from './OrderConfirmation.module.css'
 export default function OrderConfirmation({ table }) {
   const [menuItems, setMenuItems] = useState([])
   const [orders, setOrders] = useState([])
-  const [checkoutTotal, setCheckoutTotal] = useState(0)
   const [selectedQuantities, setSelectedQuantities] = useState({})
   const [customQuantityId, setCustomQuantityId] = useState(null)
   const [customQuantityValue, setCustomQuantityValue] = useState('')
   const [message, setMessage] = useState({ type: '', text: '' })
   const requestIdRef = useRef(0)
 
-  // A served item is immediately transferred to Order History (it's no longer
-  // "current" work for this table), so only pending items stay in the active
-  // list here. checkoutTotal is the running sum of served items for the
-  // table's CURRENT session only, so it resets when the table is closed out
-  // and doesn't pick up abandoned pending items from a past session.
+  // Flow: Current Order (pending) -> Items Served (served) -> Order History
+  // (completed, after Checkout). Orders are scoped to the table's CURRENT
+  // session only, so closing a table via Checkout can't leak abandoned
+  // pending/served items into the next customer's view.
   //
   // The 3s poll and an action's own post-update refresh both call this
   // independently. Without ordering, a poll fetch that started BEFORE a
   // status write committed can resolve AFTER the action's fresh refresh and
-  // clobber the state with stale pre-write data — a served item briefly
-  // snapping back to "pending" in the UI. requestIdRef makes only the most
-  // recently *issued* fetch allowed to update state, regardless of which
-  // resolves last.
+  // clobber the state with stale pre-write data. requestIdRef makes only the
+  // most recently *issued* fetch allowed to update state, regardless of
+  // which resolves last.
   const refreshOrders = async () => {
     const requestId = ++requestIdRef.current
     const allOrders = await getOrdersFromServer(table)
     if (requestId !== requestIdRef.current) return
 
     const currentSession = getFormattedTableName(table)
-    const sessionOrders = allOrders.filter(order => order.tableSession === currentSession)
-    const pendingOrders = sessionOrders.filter(order => !order.status || order.status === 'pending')
-    const servedOrders = sessionOrders.filter(order => order.status === 'served')
-
-    setOrders(pendingOrders)
-    setCheckoutTotal(servedOrders.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0))
+    const sessionOrders = allOrders.filter(order =>
+      order.tableSession === currentSession && order.status !== 'completed'
+    )
+    setOrders(sessionOrders)
   }
 
   useEffect(() => {
@@ -163,10 +158,11 @@ export default function OrderConfirmation({ table }) {
 
   const handleMarkServed = async (order) => {
     try {
-      console.log('🟠 ADMIN: handleMarkServed clicked - orderId:', order.id)
-      await updateOrderStatus(order.id, 'served')
+      const newStatus = order.status === 'served' ? 'pending' : 'served'
+      console.log('🟠 ADMIN: handleMarkServed clicked - orderId:', order.id, '| New status:', newStatus)
+      await updateOrderStatus(order.id, newStatus)
       await refreshOrders()
-      console.log('🟢 ADMIN: Marked served and transferred to Order History')
+      console.log('🟢 ADMIN: Status update sent to Firebase')
     } catch (error) {
       console.error('🔴 ADMIN: Error marking served:', error)
       setMessage({ type: 'error', text: 'Failed to update status' })
@@ -174,20 +170,26 @@ export default function OrderConfirmation({ table }) {
   }
 
   const handleCheckout = async () => {
-    if (orders.length === 0 && checkoutTotal === 0) {
-      setMessage({ type: 'error', text: 'Nothing to check out yet' })
+    if (orders.length === 0) {
+      setMessage({ type: 'error', text: 'No items to checkout' })
       return
     }
     try {
+      await Promise.all(orders.map(order => updateOrderStatus(order.id, 'completed')))
       incrementTableCounter(table)
       await refreshOrders()
-      setMessage({ type: 'success', text: 'Table closed out. Ready for the next order!' })
+      setMessage({ type: 'success', text: 'Order checked out successfully! Items moved to Order History.' })
       setTimeout(() => setMessage({ type: '', text: '' }), 3000)
     } catch (error) {
-      console.error('Error closing out table:', error)
-      setMessage({ type: 'error', text: 'Failed to close out table. Please try again.' })
+      console.error('Error during checkout:', error)
+      setMessage({ type: 'error', text: 'Checkout failed. Please try again.' })
     }
   }
+
+  const currentOrderItems = orders.filter(order => order.status !== 'served')
+  const servedOrderItems = orders.filter(order => order.status === 'served')
+  const totalAmount = orders.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
+  const servedTotal = servedOrderItems.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
 
   return (
     <div className={styles.container}>
@@ -197,12 +199,12 @@ export default function OrderConfirmation({ table }) {
         </div>
       )}
 
-      {/* Current Order (pending items only — served items transfer to Order History) */}
-      {orders.length > 0 && (
+      {/* Current Order: pending items, awaiting service */}
+      {currentOrderItems.length > 0 && (
         <div className={styles.ordersSection}>
           <h2>Current Order</h2>
           <div className={styles.ordersList}>
-            {orders.map(order => (
+            {currentOrderItems.map(order => (
               <div key={order.id} className={styles.orderItem}>
                 {order.photo && (
                   <div className={styles.itemPhoto}>
@@ -257,11 +259,58 @@ export default function OrderConfirmation({ table }) {
         </div>
       )}
 
-      {/* Checkout Total: running sum of items served this session, ready to collect */}
-      {(orders.length > 0 || checkoutTotal > 0) && (
+      {/* Items Served: staged here until Checkout transfers the table to Order History */}
+      {servedOrderItems.length > 0 && (
+        <div className={styles.servedSection}>
+          <h2>Items Served</h2>
+          <div className={styles.ordersList}>
+            {servedOrderItems.map(order => (
+              <div key={order.id} className={`${styles.orderItem} ${styles.served}`}>
+                {order.photo && (
+                  <div className={styles.itemPhoto}>
+                    <img src={order.photo} alt={order.itemName} />
+                  </div>
+                )}
+                <div className={styles.itemDetails}>
+                  <div className={styles.itemName}>{order.itemName}</div>
+                  {order.description && (
+                    <div className={styles.itemDescription}>{order.description}</div>
+                  )}
+                  {order.unitPrice > 0 && (
+                    <div className={styles.itemPrice}>
+                      ${order.unitPrice.toFixed(2)} x {order.quantity} = ${(order.unitPrice * order.quantity).toFixed(2)}
+                    </div>
+                  )}
+                </div>
+                <button
+                  className={styles.servedBtn}
+                  onClick={() => handleMarkServed(order)}
+                  title="Mark as not served"
+                >
+                  ✓
+                </button>
+                <button
+                  className={styles.deleteBtn}
+                  onClick={() => handleDeleteOrder(order.id)}
+                  title="Delete item"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className={styles.totalSection}>
+            <h3>Served Total</h3>
+            <p className={styles.totalAmount}>${servedTotal.toFixed(2)}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Order Total: everything for this table (pending + served) — Checkout transfers it all to Order History */}
+      {orders.length > 0 && (
         <div className={styles.totalSection}>
-          <h3>Checkout Total</h3>
-          <p className={styles.totalAmount}>${checkoutTotal.toFixed(2)}</p>
+          <h3>Order Total</h3>
+          <p className={styles.totalAmount}>${totalAmount.toFixed(2)}</p>
           <button className={styles.checkoutBtn} onClick={handleCheckout}>
             Checkout
           </button>

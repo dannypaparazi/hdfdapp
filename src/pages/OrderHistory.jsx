@@ -7,17 +7,15 @@ export default function OrderHistory() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [currentMonth, setCurrentMonth] = useState(new Date())
 
-  // Served items transfer here as soon as they're marked served; 'completed'
-  // is kept for any older orders that went through the previous checkout flow.
-  const isHistorical = (order) => order.status === 'served' || order.status === 'completed'
-
+  // Orders land here only after Checkout (status: completed). Served items
+  // stay staged in Order Confirmation's "Items Served" list until then.
   const fetchHistoryOrders = async () => {
     try {
       const allOrders = await getOrdersFromServer()
-      setOrders(allOrders.filter(isHistorical))
+      setOrders(allOrders.filter(o => o.status === 'completed'))
     } catch (error) {
       console.error('Failed to fetch order history:', error)
-      setOrders(getOrders(undefined, true).filter(isHistorical))
+      setOrders(getOrders(undefined, true).filter(o => o.status === 'completed'))
     }
   }
 
@@ -105,7 +103,7 @@ export default function OrderHistory() {
       <div className={styles.container}>
         <h2>Order History</h2>
         <div className={styles.emptyState}>
-          <p>No served orders yet. Orders appear here as soon as they're marked served.</p>
+          <p>No orders yet. Orders appear here after a table is checked out.</p>
         </div>
       </div>
     )
