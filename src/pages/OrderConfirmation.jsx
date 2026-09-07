@@ -6,15 +6,26 @@ import styles from './OrderConfirmation.module.css'
 export default function OrderConfirmation({ table }) {
   const [menuItems, setMenuItems] = useState([])
   const [orders, setOrders] = useState([])
+  const [checkoutTotal, setCheckoutTotal] = useState(0)
   const [selectedQuantities, setSelectedQuantities] = useState({})
   const [customQuantityId, setCustomQuantityId] = useState(null)
   const [customQuantityValue, setCustomQuantityValue] = useState('')
   const [message, setMessage] = useState({ type: '', text: '' })
 
-  // Completed (checked-out) orders belong in Order History, not this active table view.
-  const fetchActiveOrders = async (tableNum) => {
-    const orders = await getOrdersFromServer(tableNum)
-    return orders.filter(order => order.status !== 'completed')
+  // A served item is immediately transferred to Order History (it's no longer
+  // "current" work for this table), so only pending items stay in the active
+  // list here. checkoutTotal is the running sum of served items for the
+  // table's CURRENT session only, so it resets when the table is closed out
+  // and doesn't pick up abandoned pending items from a past session.
+  const refreshOrders = async () => {
+    const allOrders = await getOrdersFromServer(table)
+    const currentSession = getFormattedTableName(table)
+    const sessionOrders = allOrders.filter(order => order.tableSession === currentSession)
+    const pendingOrders = sessionOrders.filter(order => !order.status || order.status === 'pending')
+    const servedOrders = sessionOrders.filter(order => order.status === 'served')
+
+    setOrders(pendingOrders)
+    setCheckoutTotal(servedOrders.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0))
   }
 
   useEffect(() => {
@@ -28,9 +39,7 @@ export default function OrderConfirmation({ table }) {
       }
 
       try {
-        const orders = await fetchActiveOrders(table)
-        console.log('📋 ADMIN POLL: Table:', table, '| Orders fetched:', orders.length, '| Statuses:', orders.map(o => ({ id: o.id, itemName: o.itemName, status: o.status })))
-        setOrders(orders)
+        await refreshOrders()
       } catch (error) {
         console.error('Failed to fetch orders:', error)
         setOrders(getOrders(table))
@@ -102,11 +111,8 @@ export default function OrderConfirmation({ table }) {
         return updated
       })
 
-      const updatedOrders = await fetchActiveOrders(table)
-      console.log('🟡 FETCHING ORDERS - Table:', table, 'Found:', updatedOrders.length, 'orders')
-
-      setOrders(updatedOrders)
-      console.log('🟣 STATE SET - Orders length:', updatedOrders.length)
+      await refreshOrders()
+      console.log('🟣 STATE REFRESHED')
 
       setMessage({ type: 'success', text: `${item.name} x${quantity} added to order` })
       setTimeout(() => setMessage({ type: '', text: '' }), 2000)
@@ -125,8 +131,7 @@ export default function OrderConfirmation({ table }) {
           ...order,
           quantity: parseInt(newQuantity),
         }, table)
-        const updatedOrders = await fetchActiveOrders(table)
-        setOrders(updatedOrders)
+        await refreshOrders()
       }
     } catch (error) {
       console.error('Error updating order quantity:', error)
@@ -137,8 +142,7 @@ export default function OrderConfirmation({ table }) {
   const handleDeleteOrder = async (orderId) => {
     try {
       await deleteOrder(orderId)
-      const updatedOrders = await fetchActiveOrders(table)
-      setOrders(updatedOrders)
+      await refreshOrders()
     } catch (error) {
       console.error('Error deleting order:', error)
       setMessage({ type: 'error', text: 'Failed to delete order' })
@@ -147,12 +151,10 @@ export default function OrderConfirmation({ table }) {
 
   const handleMarkServed = async (order) => {
     try {
-      const newStatus = order.status === 'served' ? 'pending' : 'served'
-      console.log('🟠 ADMIN: handleMarkServed clicked - orderId:', order.id, '| New status:', newStatus)
-      await updateOrderStatus(order.id, newStatus)
-      const updatedOrders = await fetchActiveOrders(table)
-      setOrders(updatedOrders)
-      console.log('🟢 ADMIN: Status update sent to Firebase')
+      console.log('🟠 ADMIN: handleMarkServed clicked - orderId:', order.id)
+      await updateOrderStatus(order.id, 'served')
+      await refreshOrders()
+      console.log('🟢 ADMIN: Marked served and transferred to Order History')
     } catch (error) {
       console.error('🔴 ADMIN: Error marking served:', error)
       setMessage({ type: 'error', text: 'Failed to update status' })
@@ -160,26 +162,20 @@ export default function OrderConfirmation({ table }) {
   }
 
   const handleCheckout = async () => {
-    if (orders.length === 0) {
-      setMessage({ type: 'error', text: 'No items to checkout' })
+    if (orders.length === 0 && checkoutTotal === 0) {
+      setMessage({ type: 'error', text: 'Nothing to check out yet' })
       return
     }
     try {
-      await Promise.all(orders.map(order => updateOrderStatus(order.id, 'completed')))
       incrementTableCounter(table)
-      setOrders([])
-      setMessage({ type: 'success', text: 'Order checked out successfully! Items moved to Order History.' })
+      await refreshOrders()
+      setMessage({ type: 'success', text: 'Table closed out. Ready for the next order!' })
       setTimeout(() => setMessage({ type: '', text: '' }), 3000)
     } catch (error) {
-      console.error('Error during checkout:', error)
-      setMessage({ type: 'error', text: 'Checkout failed. Please try again.' })
+      console.error('Error closing out table:', error)
+      setMessage({ type: 'error', text: 'Failed to close out table. Please try again.' })
     }
   }
-
-  const currentOrderItems = orders.filter(order => order.status !== 'served')
-  const servedOrderItems = orders.filter(order => order.status === 'served')
-  const totalAmount = orders.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
-  const servedTotal = servedOrderItems.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
 
   return (
     <div className={styles.container}>
@@ -189,12 +185,12 @@ export default function OrderConfirmation({ table }) {
         </div>
       )}
 
-      {/* Current Order */}
+      {/* Current Order (pending items only — served items transfer to Order History) */}
       {orders.length > 0 && (
         <div className={styles.ordersSection}>
           <h2>Current Order</h2>
           <div className={styles.ordersList}>
-            {currentOrderItems.map(order => (
+            {orders.map(order => (
               <div key={order.id} className={styles.orderItem}>
                 {order.photo && (
                   <div className={styles.itemPhoto}>
@@ -246,60 +242,17 @@ export default function OrderConfirmation({ table }) {
               </div>
             ))}
           </div>
-          <div className={styles.totalSection}>
-            <h3>Order Total</h3>
-            <p className={styles.totalAmount}>${totalAmount.toFixed(2)}</p>
-            <button className={styles.checkoutBtn} onClick={handleCheckout}>
-              Checkout
-            </button>
-          </div>
         </div>
       )}
 
-      {/* Served Items */}
-      {servedOrderItems.length > 0 && (
-        <div className={styles.servedSection}>
-          <h2>Served Items</h2>
-          <div className={styles.ordersList}>
-            {servedOrderItems.map(order => (
-              <div key={order.id} className={`${styles.orderItem} ${styles.served}`}>
-                {order.photo && (
-                  <div className={styles.itemPhoto}>
-                    <img src={order.photo} alt={order.itemName} />
-                  </div>
-                )}
-                <div className={styles.itemDetails}>
-                  <div className={styles.itemName}>{order.itemName}</div>
-                  {order.description && (
-                    <div className={styles.itemDescription}>{order.description}</div>
-                  )}
-                  {order.unitPrice > 0 && (
-                    <div className={styles.itemPrice}>
-                      ${order.unitPrice.toFixed(2)} x {order.quantity} = ${(order.unitPrice * order.quantity).toFixed(2)}
-                    </div>
-                  )}
-                </div>
-                <button
-                  className={styles.servedBtn}
-                  onClick={() => handleMarkServed(order)}
-                  title="Mark as not served"
-                >
-                  ✓
-                </button>
-                <button
-                  className={styles.deleteBtn}
-                  onClick={() => handleDeleteOrder(order.id)}
-                  title="Delete item"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-          </div>
-          <div className={styles.totalSection}>
-            <h3>Served Total</h3>
-            <p className={styles.totalAmount}>${servedTotal.toFixed(2)}</p>
-          </div>
+      {/* Checkout Total: running sum of items served this session, ready to collect */}
+      {(orders.length > 0 || checkoutTotal > 0) && (
+        <div className={styles.totalSection}>
+          <h3>Checkout Total</h3>
+          <p className={styles.totalAmount}>${checkoutTotal.toFixed(2)}</p>
+          <button className={styles.checkoutBtn} onClick={handleCheckout}>
+            Checkout
+          </button>
         </div>
       )}
 

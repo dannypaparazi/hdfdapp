@@ -7,24 +7,30 @@ export default function OrderHistory() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [currentMonth, setCurrentMonth] = useState(new Date())
 
-  const fetchCompletedOrders = async () => {
+  // Served items transfer here as soon as they're marked served; 'completed'
+  // is kept for any older orders that went through the previous checkout flow.
+  const isHistorical = (order) => order.status === 'served' || order.status === 'completed'
+
+  const fetchHistoryOrders = async () => {
     try {
       const allOrders = await getOrdersFromServer()
-      setOrders(allOrders.filter(o => o.status === 'completed'))
+      setOrders(allOrders.filter(isHistorical))
     } catch (error) {
       console.error('Failed to fetch order history:', error)
-      setOrders(getOrders(undefined, true).filter(o => o.status === 'completed'))
+      setOrders(getOrders(undefined, true).filter(isHistorical))
     }
   }
 
   useEffect(() => {
-    fetchCompletedOrders()
+    fetchHistoryOrders()
+    const interval = setInterval(fetchHistoryOrders, 5000)
+    return () => clearInterval(interval)
   }, [])
 
   const handleDeleteOrder = async (id) => {
     if (confirm('Are you sure you want to delete this order?')) {
       await deleteOrder(id)
-      fetchCompletedOrders()
+      fetchHistoryOrders()
     }
   }
 
@@ -99,7 +105,7 @@ export default function OrderHistory() {
       <div className={styles.container}>
         <h2>Order History</h2>
         <div className={styles.emptyState}>
-          <p>No paid orders yet. Orders appear here after checkout.</p>
+          <p>No served orders yet. Orders appear here as soon as they're marked served.</p>
         </div>
       </div>
     )
