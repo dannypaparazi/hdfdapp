@@ -46,6 +46,15 @@ export async function addItemToFirebase(itemData) {
   }
 }
 
+export async function updateItemInFirebase(itemId, itemData) {
+  try {
+    await updateDoc(doc(db, ITEMS_COLLECTION, itemId), itemData)
+  } catch (error) {
+    console.error('Error updating item in Firebase:', error)
+    throw error
+  }
+}
+
 export async function deleteItemFromFirebase(itemId) {
   try {
     await deleteDoc(doc(db, ITEMS_COLLECTION, itemId))

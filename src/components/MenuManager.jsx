@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getItems, addItem, deleteItem } from '../utils/storage'
+import { getItems, addItem, updateItem, deleteItem } from '../utils/storage'
 import styles from './MenuManager.module.css'
 
 export default function MenuManager() {
@@ -52,14 +52,21 @@ export default function MenuManager() {
     }
 
     try {
-      await addItem({
+      const itemData = {
         name: formData.name,
         cost: parseFloat(formData.cost),
         description: formData.description,
         photo: formData.photo,
-      })
+      }
 
-      setMessage({ type: 'success', text: `Item "${formData.name}" added successfully` })
+      if (editingId) {
+        await updateItem(editingId, itemData)
+        setMessage({ type: 'success', text: `Item "${formData.name}" updated successfully` })
+      } else {
+        await addItem(itemData)
+        setMessage({ type: 'success', text: `Item "${formData.name}" added successfully` })
+      }
+
       setItems(getItems())
       setFormData({
         name: '',
@@ -71,7 +78,7 @@ export default function MenuManager() {
       setShowForm(false)
       setEditingId(null)
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to add item' })
+      setMessage({ type: 'error', text: editingId ? 'Failed to update item' : 'Failed to add item' })
       console.error(error)
     }
   }

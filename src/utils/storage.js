@@ -1,6 +1,6 @@
 import { addArchivedOrder, getArchivedOrders, clearArchivedOrders, getArchiveStats } from './indexeddb'
 import { getFormattedTableName } from './tableCounter'
-import { getItemsFromFirebase, addItemToFirebase, deleteItemFromFirebase, getOrdersFromFirebase, addOrderToFirebase, deleteOrderFromFirebase, updateOrderStatusInFirebase } from './firebase'
+import { getItemsFromFirebase, addItemToFirebase, updateItemInFirebase, deleteItemFromFirebase, getOrdersFromFirebase, addOrderToFirebase, deleteOrderFromFirebase, updateOrderStatusInFirebase } from './firebase'
 
 const ORDERS_KEY = 'hotpot_orders'
 const ITEMS_KEY = 'hotpot_items'
@@ -222,6 +222,31 @@ export async function addItem(item) {
     return completeItem
   } catch (error) {
     console.error('Error adding item:', error)
+    throw error
+  }
+}
+
+export async function updateItem(id, item) {
+  try {
+    const updatedFields = {
+      name: item.name,
+      cost: item.cost,
+      description: item.description,
+      photo: item.photo,
+    }
+    await updateItemInFirebase(id, updatedFields)
+    const completeItem = { id, ...updatedFields }
+
+    // Update cache
+    if (itemsCache) {
+      itemsCache = itemsCache.map(cached => cached.id === id ? { ...cached, ...updatedFields } : cached)
+      cacheTimestamp = Date.now()
+      localStorage.setItem(ITEMS_KEY, JSON.stringify(itemsCache))
+    }
+
+    return completeItem
+  } catch (error) {
+    console.error('Error updating item:', error)
     throw error
   }
 }
