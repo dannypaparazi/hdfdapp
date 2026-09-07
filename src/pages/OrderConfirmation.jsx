@@ -273,6 +273,20 @@ export default function OrderConfirmation({ table }) {
         </div>
       )}
 
+      {/* Order Total: everything still active for this table (pending + served).
+          Served items normally transfer individually via their own tick;
+          Checkout is the safety net that finalizes whatever's left and
+          starts a fresh session for the next customer. */}
+      {orders.length > 0 && (
+        <div className={styles.totalSection}>
+          <h3>Order Total</h3>
+          <p className={styles.totalAmount}>${totalAmount.toFixed(2)}</p>
+          <button className={styles.checkoutBtn} onClick={handleCheckout}>
+            Checkout
+          </button>
+        </div>
+      )}
+
       {/* Items Served: tick transfers this item to Order History individually */}
       {servedOrderItems.length > 0 && (
         <div className={styles.servedSection}>
@@ -317,20 +331,6 @@ export default function OrderConfirmation({ table }) {
             <h3>Served Total</h3>
             <p className={styles.totalAmount}>${servedTotal.toFixed(2)}</p>
           </div>
-        </div>
-      )}
-
-      {/* Order Total: everything still active for this table (pending + served).
-          Served items normally transfer individually via their own tick;
-          Checkout is the safety net that finalizes whatever's left and
-          starts a fresh session for the next customer. */}
-      {orders.length > 0 && (
-        <div className={styles.totalSection}>
-          <h3>Order Total</h3>
-          <p className={styles.totalAmount}>${totalAmount.toFixed(2)}</p>
-          <button className={styles.checkoutBtn} onClick={handleCheckout}>
-            Checkout
-          </button>
         </div>
       )}
 
