@@ -202,7 +202,7 @@ export default function OrderConfirmation({ table }) {
 
   const currentOrderItems = orders.filter(order => order.status !== 'served')
   const servedOrderItems = orders.filter(order => order.status === 'served')
-  const totalAmount = orders.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
+  const totalAmount = currentOrderItems.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
   const servedTotal = servedOrderItems.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
 
   return (
@@ -273,17 +273,11 @@ export default function OrderConfirmation({ table }) {
         </div>
       )}
 
-      {/* Order Total: everything still active for this table (pending + served).
-          Served items normally transfer individually via their own tick;
-          Checkout is the safety net that finalizes whatever's left and
-          starts a fresh session for the next customer. */}
+      {/* Order Total: subtotal of pending items still in Current Order. */}
       {orders.length > 0 && (
         <div className={styles.totalSection}>
           <h3>Order Total</h3>
           <p className={styles.totalAmount}>${totalAmount.toFixed(2)}</p>
-          <button className={styles.checkoutBtn} onClick={handleCheckout}>
-            Checkout
-          </button>
         </div>
       )}
 
@@ -327,10 +321,20 @@ export default function OrderConfirmation({ table }) {
               </div>
             ))}
           </div>
-          <div className={styles.totalSection}>
-            <h3>Served Total</h3>
-            <p className={styles.totalAmount}>${servedTotal.toFixed(2)}</p>
-          </div>
+        </div>
+      )}
+
+      {/* Served Total: Checkout lives here — finalizes whatever's still active
+          for this table (pending + served) as completed, and starts a fresh
+          session for the next customer. Shown whenever there's anything
+          active so Checkout stays reachable even before anything's served. */}
+      {orders.length > 0 && (
+        <div className={styles.totalSection}>
+          <h3>Served Total</h3>
+          <p className={styles.totalAmount}>${servedTotal.toFixed(2)}</p>
+          <button className={styles.checkoutBtn} onClick={handleCheckout}>
+            Checkout
+          </button>
         </div>
       )}
 
