@@ -3,6 +3,11 @@ import { getItems, getItemsFromServer, addOrder, getOrders, getOrdersFromServer 
 import { getFormattedTableName } from '../utils/tableCounter'
 import styles from './UserOrder.module.css'
 
+const formatTime = (isoString) => {
+  if (!isoString) return ''
+  return new Date(isoString).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+}
+
 export default function UserOrder({ table, onLogout }) {
   const [menuItems, setMenuItems] = useState([])
   const [orders, setOrders] = useState([])
@@ -156,6 +161,7 @@ export default function UserOrder({ table, onLogout }) {
                   <div className={styles.itemMeta}>
                     Qty: {order.quantity} × ${order.unitPrice.toFixed(2)}
                   </div>
+                  <div className={styles.itemTimestamp}>{formatTime(order.timestamp || order.createdAt)}</div>
                 </div>
                 <div className={styles.itemAmount}>
                   ${(order.quantity * order.unitPrice).toFixed(2)}
@@ -176,6 +182,7 @@ export default function UserOrder({ table, onLogout }) {
                       <div className={styles.itemMeta}>
                         Qty: {order.quantity}
                       </div>
+                      <div className={styles.itemTimestamp}>{formatTime(order.timestamp || order.createdAt)}</div>
                     </div>
                     <div className={styles.itemAmount}>
                       ✓
@@ -198,6 +205,7 @@ export default function UserOrder({ table, onLogout }) {
                       <div className={styles.itemMeta}>
                         Qty: {order.quantity}
                       </div>
+                      <div className={styles.itemTimestamp}>{formatTime(order.timestamp || order.createdAt)}</div>
                     </div>
                     <div className={styles.itemAmount}>
                       ✕

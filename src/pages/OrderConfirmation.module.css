@@ -132,6 +132,12 @@
   margin-top: 0.5rem;
 }
 
+.itemTimestamp {
+  color: #95a5a6;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
 .quantitySection {
   display: flex;
   align-items: center;

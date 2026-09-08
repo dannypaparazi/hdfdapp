@@ -122,6 +122,12 @@
   margin-top: 0.25rem;
 }
 
+.itemTimestamp {
+  color: #b2bec3;
+  font-size: 0.75rem;
+  margin-top: 0.15rem;
+}
+
 .itemAmount {
   color: #667eea;
   font-weight: 700;

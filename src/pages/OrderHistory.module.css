@@ -224,6 +224,12 @@
   font-size: 0.8rem;
 }
 
+.lineItemTimestamp {
+  color: #b2bec3;
+  font-size: 0.75rem;
+  margin-top: 0.2rem;
+}
+
 .lineItemPrice {
   color: #27ae60;
   font-weight: 700;

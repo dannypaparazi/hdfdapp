@@ -3,6 +3,11 @@ import { addOrder, getOrders, deleteOrder, getItems, getOrdersFromServer, getIte
 import { getFormattedTableName, incrementTableCounter } from '../utils/tableCounter'
 import styles from './OrderConfirmation.module.css'
 
+const formatTime = (isoString) => {
+  if (!isoString) return ''
+  return new Date(isoString).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+}
+
 export default function OrderConfirmation({ table }) {
   const [menuItems, setMenuItems] = useState([])
   const [orders, setOrders] = useState([])
@@ -254,6 +259,7 @@ export default function OrderConfirmation({ table }) {
                       ${order.unitPrice.toFixed(2)} x {order.quantity} = ${(order.unitPrice * order.quantity).toFixed(2)}
                     </div>
                   )}
+                  <div className={styles.itemTimestamp}>{formatTime(order.timestamp || order.createdAt)}</div>
                 </div>
                 <div className={styles.quantitySection}>
                   <button
@@ -329,6 +335,7 @@ export default function OrderConfirmation({ table }) {
                       ${order.unitPrice.toFixed(2)} x {order.quantity} = ${(order.unitPrice * order.quantity).toFixed(2)}
                     </div>
                   )}
+                  <div className={styles.itemTimestamp}>{formatTime(order.timestamp || order.createdAt)}</div>
                 </div>
                 <button
                   className={styles.servedBtn}

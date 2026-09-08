@@ -32,9 +32,9 @@ export default function OrderHistory() {
     }
   }
 
-  const formatDate = (isoString) => {
-    const date = new Date(isoString)
-    return date.toLocaleString()
+  const formatTime = (isoString) => {
+    if (!isoString) return ''
+    return new Date(isoString).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
   }
 
   const getDateKey = (isoString) => {
@@ -179,6 +179,7 @@ export default function OrderHistory() {
                             <span className={styles.lineItemDescription}>{order.description}</span>
                           )}
                         </div>
+                        <div className={styles.lineItemTimestamp}>{formatTime(order.timestamp || order.createdAt)}</div>
                       </div>
                       <div className={styles.lineItemPrice}>
                         ${order.unitPrice ? order.unitPrice.toFixed(2) : '0.00'}
