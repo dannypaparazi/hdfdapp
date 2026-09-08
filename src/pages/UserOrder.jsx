@@ -117,7 +117,10 @@ export default function UserOrder({ table, onLogout }) {
     setTimeout(() => setMessage({ type: '', text: '' }), 2000)
   }
 
-  const totalAmount = orders.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
+  // Rejected items aren't being charged for, so they shouldn't count toward
+  // the order summary or total.
+  const billableOrders = orders.filter(order => order.status !== 'unable_to_serve')
+  const totalAmount = billableOrders.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
 
   return (
     <div className={styles.container}>
@@ -141,7 +144,7 @@ export default function UserOrder({ table, onLogout }) {
       {orders.length > 0 && (
         <div className={styles.orderSummary}>
           <div className={styles.orderCount}>
-            {orders.length} item{orders.length !== 1 ? 's' : ''} in order
+            {billableOrders.length} item{billableOrders.length !== 1 ? 's' : ''} in order
           </div>
           <div className={styles.orderTotal}>
             Total: <span>${totalAmount.toFixed(2)}</span>

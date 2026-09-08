@@ -5,12 +5,12 @@
 }
 
 .container h1 {
-  color: #2c3e50;
+  color: var(--color-text);
   margin: 0 0 0.5rem;
 }
 
 .subtitle {
-  color: #7f8c8d;
+  color: var(--color-text-secondary);
   margin: 0 0 2rem;
   font-size: 0.95rem;
 }
@@ -18,9 +18,9 @@
 .empty {
   text-align: center;
   padding: 2rem;
-  background: #f8f9fa;
+  background: var(--color-bg);
   border-radius: 8px;
-  color: #7f8c8d;
+  color: var(--color-text-secondary);
 }
 
 .dailyBreakdown {
@@ -32,12 +32,12 @@
 .dayCard {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
 .dayHeader {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
   color: white;
   padding: 1.5rem;
   display: flex;
@@ -76,10 +76,10 @@
   grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
   gap: 1rem;
   padding: 1rem 1.5rem;
-  background: #f8f9fa;
-  border-bottom: 2px solid #ecf0f1;
+  background: var(--color-bg);
+  border-bottom: 2px solid var(--color-border-light);
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--color-text);
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -90,7 +90,7 @@
   grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
   gap: 1rem;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #ecf0f1;
+  border-bottom: 1px solid var(--color-border-light);
   align-items: center;
   font-size: 0.95rem;
 }
@@ -100,12 +100,12 @@
 }
 
 .tableRow:hover {
-  background: #f8f9fa;
+  background: var(--color-bg);
 }
 
 .colItemName {
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .colQty,
@@ -117,7 +117,7 @@
 
 .badge {
   display: inline-block;
-  background: #3498db;
+  background: var(--color-primary);
   color: white;
   padding: 0.35rem 0.75rem;
   border-radius: 20px;
@@ -128,10 +128,10 @@
 
 .totalBadge {
   display: inline-block;
-  background: #27ae60;
+  background: var(--color-primary);
   color: white;
   padding: 0.35rem 0.75rem;
-  border-radius: 4px;
+  border-radius: 8px;
   font-weight: 600;
   font-size: 0.9rem;
 }
@@ -163,14 +163,14 @@
     grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
     padding: 1rem;
-    border: 1px solid #ecf0f1;
+    border: 1px solid var(--color-border-light);
     margin-bottom: 0.75rem;
-    border-radius: 6px;
+    border-radius: 8px;
   }
 
   .colItemName {
     grid-column: 1 / -1;
-    border-bottom: 2px solid #ecf0f1;
+    border-bottom: 2px solid var(--color-border-light);
     padding-bottom: 0.75rem;
   }
 
@@ -181,7 +181,7 @@
     content: attr(data-label);
     display: block;
     font-weight: 600;
-    color: #7f8c8d;
+    color: var(--color-text-secondary);
     font-size: 0.75rem;
     text-transform: uppercase;
     margin-bottom: 0.25rem;

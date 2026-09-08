@@ -6,13 +6,13 @@
   display: flex;
   gap: 0;
   margin-bottom: 2rem;
-  border-bottom: 2px solid #ecf0f1;
+  border-bottom: 2px solid var(--color-border-light);
 }
 
 .sectionBtn {
   padding: 1rem 1.5rem;
   background: transparent;
-  color: #7f8c8d;
+  color: var(--color-text-secondary);
   font-weight: 600;
   border: none;
   border-bottom: 3px solid transparent;
@@ -22,10 +22,10 @@
 }
 
 .sectionBtn:hover {
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .sectionBtn.active {
-  color: #27ae60;
-  border-bottom-color: #27ae60;
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
 }

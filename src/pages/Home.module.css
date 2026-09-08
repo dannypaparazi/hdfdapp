@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--color-bg);
   padding: 2rem;
 }
 
@@ -26,14 +26,14 @@
 
 .header h1 {
   margin: 0;
-  color: #2c3e50;
+  color: var(--color-text);
   font-size: 2.5rem;
   font-weight: 700;
 }
 
 .subtitle {
   margin: 0.5rem 0 0;
-  color: #7f8c8d;
+  color: var(--color-text-secondary);
   font-size: 1.1rem;
 }
 
@@ -46,7 +46,7 @@
 
 .content h2 {
   text-align: center;
-  color: #2c3e50;
+  color: var(--color-text);
   font-size: 1.8rem;
   margin-bottom: 2rem;
   text-transform: uppercase;
@@ -68,21 +68,21 @@
   gap: 0.75rem;
   padding: 1.5rem 1rem;
   background: white;
-  border: 2px solid #3498db;
+  border: 2px solid var(--color-primary);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   font-weight: 600;
   font-size: 1rem;
   min-height: 120px;
 }
 
 .tableButton:hover {
-  background: #3498db;
+  background: var(--color-primary);
   color: white;
   transform: translateY(-5px);
-  box-shadow: 0 8px 15px rgba(52, 152, 219, 0.3);
+  box-shadow: 0 8px 15px rgba(99, 102, 241, 0.3);
 }
 
 .tableButton:active {

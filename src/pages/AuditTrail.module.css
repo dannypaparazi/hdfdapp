@@ -4,7 +4,7 @@
 
 .container h2 {
   margin-top: 0;
-  color: #2c3e50;
+  color: var(--color-text);
   font-size: 1.6rem;
   margin-bottom: 1.5rem;
 }
@@ -16,7 +16,7 @@
   background: white;
   padding: 1.25rem;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
 }
@@ -30,17 +30,17 @@
 .filterGroup label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #7f8c8d;
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .filterGroup select {
   padding: 0.5rem 0.75rem;
-  border: 1px solid #bdc3c7;
-  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
   font-size: 0.95rem;
-  color: #2c3e50;
+  color: var(--color-text);
   background: white;
   cursor: pointer;
   min-width: 160px;
@@ -48,17 +48,17 @@
 
 .summary {
   margin-left: auto;
-  color: #7f8c8d;
+  color: var(--color-text-secondary);
   font-weight: 600;
   font-size: 0.9rem;
 }
 
 .emptyState {
-  background: #ecf0f1;
+  background: var(--color-border-light);
   padding: 2rem;
   border-radius: 8px;
   text-align: center;
-  color: #7f8c8d;
+  color: var(--color-text-secondary);
 }
 
 .emptyState p {
@@ -69,7 +69,7 @@
 .tableWrapper {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
   overflow-x: auto;
 }
 
@@ -80,7 +80,7 @@
 }
 
 .auditTable th {
-  background: #34495e;
+  background: var(--color-dark);
   color: white;
   text-align: left;
   padding: 0.85rem 1rem;
@@ -93,13 +93,13 @@
 
 .auditTable td {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #ecf0f1;
-  color: #2c3e50;
+  border-bottom: 1px solid var(--color-border-light);
+  color: var(--color-text);
   white-space: nowrap;
 }
 
 .auditTable tbody tr:hover {
-  background-color: #f8f9fa;
+  background-color: var(--color-bg);
 }
 
 .auditTable tbody tr:last-child td {
@@ -116,23 +116,23 @@
 }
 
 .badge.pending {
-  background-color: #fdebd0;
-  color: #b9770e;
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning-hover);
 }
 
 .badge.served {
-  background-color: #d5f4e6;
-  color: #1e8449;
+  background-color: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .badge.unable {
-  background-color: #fadbd8;
-  color: #c0392b;
+  background-color: var(--color-error-bg);
+  color: var(--color-error-hover);
 }
 
 .badge.completed {
-  background-color: #d6eaf8;
-  color: #2874a6;
+  background-color: var(--color-info-bg);
+  color: var(--color-info);
 }
 
 @media (max-width: 1024px) {
