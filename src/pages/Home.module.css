@@ -37,6 +37,68 @@
   font-size: 1.1rem;
 }
 
+.pendingSection {
+  max-width: 1000px;
+  margin: 0 auto 2.5rem;
+  width: 100%;
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.pendingSection h3 {
+  margin: 0 0 1rem;
+  color: var(--color-warning-hover);
+  font-size: 1.1rem;
+}
+
+.pendingList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.pendingItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s;
+}
+
+.pendingItem:hover {
+  background: var(--color-warning-border);
+}
+
+.pendingTable {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  min-width: 70px;
+}
+
+.pendingName {
+  flex: 1;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.pendingTime {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
 .content {
   flex: 1;
   max-width: 1000px;
@@ -166,6 +228,27 @@
   .content h2 {
     font-size: 1.3rem;
     margin-bottom: 1rem;
+  }
+
+  .pendingSection {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .pendingSection h3 {
+    font-size: 1rem;
+  }
+
+  .pendingItem {
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .pendingName {
+    font-size: 0.85rem;
+    width: 100%;
+    order: 3;
   }
 
   .tablesGrid {
