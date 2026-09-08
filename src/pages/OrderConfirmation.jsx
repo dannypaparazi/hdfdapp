@@ -18,9 +18,17 @@ export default function OrderConfirmation({ table }) {
   const requestIdRef = useRef(0)
 
   // Flow: Current Order (pending) -> Items Served (served) -> Order History
-  // (completed, after Checkout). Orders are scoped to the table's CURRENT
-  // session only, so closing a table via Checkout can't leak abandoned
-  // pending/served items into the next customer's view.
+  // (completed, after Checkout).
+  //
+  // Active orders are matched by table number and non-completed status only
+  // — NOT by tableSession. The session counter lives in each device's own
+  // localStorage and is never synced through Firebase, so a customer's app
+  // and the admin's app can easily disagree on the current session number
+  // for a table (e.g. admin checked out a previous round, bumping its local
+  // counter, while an in-flight order still carries the old session tag).
+  // Filtering strictly by session match then hides real, unresolved orders
+  // from admin — silently losing orders is far worse than an old pending
+  // item lingering an extra session, so match on table alone here.
   //
   // The 3s poll and an action's own post-update refresh both call this
   // independently. Without ordering, a poll fetch that started BEFORE a
@@ -33,11 +41,8 @@ export default function OrderConfirmation({ table }) {
     const allOrders = await getOrdersFromServer(table)
     if (requestId !== requestIdRef.current) return
 
-    const currentSession = getFormattedTableName(table)
-    const sessionOrders = allOrders.filter(order =>
-      order.tableSession === currentSession && order.status !== 'completed'
-    )
-    setOrders(sessionOrders)
+    const activeOrders = allOrders.filter(order => order.status !== 'completed')
+    setOrders(activeOrders)
   }
 
   useEffect(() => {
