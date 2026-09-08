@@ -239,6 +239,28 @@
   background-color: #c0392b;
 }
 
+.rejectBtn {
+  padding: 0.5rem 0.75rem;
+  background-color: #e67e22;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+  min-width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rejectBtn:hover {
+  background-color: #d35400;
+}
+
 /* Total Section */
 .totalSection {
   background: #f8f9fa;
@@ -593,6 +615,12 @@
     font-size: 0.9rem;
   }
 
+  .rejectBtn {
+    min-width: 40px;
+    height: 40px;
+    font-size: 0.9rem;
+  }
+
   .deleteBtn {
     min-width: 40px;
     height: 40px;
@@ -786,6 +814,12 @@
   }
 
   .servedBtn {
+    min-width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
+  }
+
+  .rejectBtn {
     min-width: 36px;
     height: 36px;
     font-size: 0.85rem;

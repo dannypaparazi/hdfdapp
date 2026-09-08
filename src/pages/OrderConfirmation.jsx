@@ -169,6 +169,25 @@ export default function OrderConfirmation({ table }) {
     }
   }
 
+  // Current Order -> rejected (item can't be served). UserOrder.jsx already
+  // watches for this status and shows the customer a "not available"
+  // notification — this is what actually triggers it.
+  const handleReject = async (order) => {
+    if (!confirm(`Mark "${order.itemName}" as unable to serve? The customer will be notified.`)) {
+      return
+    }
+    try {
+      console.log('🟠 ADMIN: handleReject clicked - orderId:', order.id)
+      await updateOrderStatus(order.id, 'unable_to_serve')
+      await refreshOrders()
+      setMessage({ type: 'success', text: `"${order.itemName}" marked unable to serve — customer notified` })
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000)
+    } catch (error) {
+      console.error('🔴 ADMIN: Error rejecting order:', error)
+      setMessage({ type: 'error', text: 'Failed to update status' })
+    }
+  }
+
   // Items Served -> Order History (transfers this one item individually,
   // no need to wait for Checkout)
   const handleTransferToHistory = async (order) => {
@@ -200,7 +219,7 @@ export default function OrderConfirmation({ table }) {
     }
   }
 
-  const currentOrderItems = orders.filter(order => order.status !== 'served')
+  const currentOrderItems = orders.filter(order => !order.status || order.status === 'pending')
   const servedOrderItems = orders.filter(order => order.status === 'served')
   const totalAmount = currentOrderItems.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
   const servedTotal = servedOrderItems.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
@@ -259,6 +278,13 @@ export default function OrderConfirmation({ table }) {
                   title="Mark as served"
                 >
                   ✓
+                </button>
+                <button
+                  className={styles.rejectBtn}
+                  onClick={() => handleReject(order)}
+                  title="Unable to serve — notifies customer"
+                >
+                  ⚠
                 </button>
                 <button
                   className={styles.deleteBtn}
