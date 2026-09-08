@@ -149,8 +149,8 @@ export default function UserOrder({ table, onLogout }) {
         <div className={styles.orderItemsList}>
           <h3>Your Order</h3>
           <div className={styles.itemsTable}>
-            {orders.filter(o => o.status !== 'served').map(order => (
-              <div key={order.id} className={`${styles.orderItemRow} ${order.status === 'unable_to_serve' ? styles.unavailable : ''}`}>
+            {orders.filter(o => o.status !== 'served' && o.status !== 'unable_to_serve').map(order => (
+              <div key={order.id} className={styles.orderItemRow}>
                 <div className={styles.itemDetails}>
                   <div className={styles.itemName}>{order.itemName}</div>
                   <div className={styles.itemMeta}>
@@ -179,6 +179,28 @@ export default function UserOrder({ table, onLogout }) {
                     </div>
                     <div className={styles.itemAmount}>
                       ✓
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Unable to Serve Items */}
+          {orders.filter(o => o.status === 'unable_to_serve').length > 0 && (
+            <div className={styles.unavailableSection}>
+              <h4>❌ Unable to Serve</h4>
+              <div className={styles.itemsTable}>
+                {orders.filter(o => o.status === 'unable_to_serve').map(order => (
+                  <div key={order.id} className={`${styles.orderItemRow} ${styles.unavailable}`}>
+                    <div className={styles.itemDetails}>
+                      <div className={styles.itemName}>{order.itemName}</div>
+                      <div className={styles.itemMeta}>
+                        Qty: {order.quantity}
+                      </div>
+                    </div>
+                    <div className={styles.itemAmount}>
+                      ✕
                     </div>
                   </div>
                 ))}

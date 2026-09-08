@@ -154,6 +154,19 @@
   margin: 0 0 0.75rem;
 }
 
+.unavailableSection {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 2px solid #e74c3c;
+}
+
+.unavailableSection h4 {
+  color: #e74c3c;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+}
+
 .message {
   margin: 0 1rem 1rem;
   padding: 0.75rem;
