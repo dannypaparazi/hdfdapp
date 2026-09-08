@@ -164,7 +164,10 @@ export default function UserOrder({ table, onLogout }) {
                   <div className={styles.itemMeta}>
                     Qty: {order.quantity} × ${order.unitPrice.toFixed(2)}
                   </div>
-                  <div className={styles.itemTimestamp}>{formatTime(order.timestamp || order.createdAt)}</div>
+                  <div className={styles.itemTimestamp}>
+                    {formatTime(order.timestamp || order.createdAt)}
+                    {order.source === 'admin' && <span className={styles.staffBadge}>Added by staff</span>}
+                  </div>
                 </div>
                 <div className={styles.itemAmount}>
                   ${(order.quantity * order.unitPrice).toFixed(2)}
@@ -185,7 +188,10 @@ export default function UserOrder({ table, onLogout }) {
                       <div className={styles.itemMeta}>
                         Qty: {order.quantity}
                       </div>
-                      <div className={styles.itemTimestamp}>{formatTime(order.timestamp || order.createdAt)}</div>
+                      <div className={styles.itemTimestamp}>
+                    {formatTime(order.timestamp || order.createdAt)}
+                    {order.source === 'admin' && <span className={styles.staffBadge}>Added by staff</span>}
+                  </div>
                     </div>
                     <div className={styles.itemAmount}>
                       ✓
@@ -208,7 +214,10 @@ export default function UserOrder({ table, onLogout }) {
                       <div className={styles.itemMeta}>
                         Qty: {order.quantity}
                       </div>
-                      <div className={styles.itemTimestamp}>{formatTime(order.timestamp || order.createdAt)}</div>
+                      <div className={styles.itemTimestamp}>
+                    {formatTime(order.timestamp || order.createdAt)}
+                    {order.source === 'admin' && <span className={styles.staffBadge}>Added by staff</span>}
+                  </div>
                     </div>
                     <div className={styles.itemAmount}>
                       ✕

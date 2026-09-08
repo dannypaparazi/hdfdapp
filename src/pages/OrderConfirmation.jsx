@@ -118,6 +118,7 @@ export default function OrderConfirmation({ table }) {
         description: item.description,
         unitPrice: item.cost,
         timestamp: new Date().toISOString(),
+        source: 'admin',
       }, table)
 
       console.log('🟢 ORDER ADDED')
