@@ -4,7 +4,7 @@ import { getArchiveStats, clearArchivedOrders } from '../utils/indexeddb'
 import { exportArchivedOrdersToExcel } from '../utils/exportUtils'
 import styles from './StorageManager.module.css'
 
-export default function StorageManager() {
+export default function StorageManager({ canWrite = true }) {
   const [storage, setStorage] = useState({ used: 0, percent: 0, details: {} })
   const [archiveStats, setArchiveStats] = useState({ count: 0 })
   const [archivedCount, setArchivedCount] = useState(0)
@@ -140,15 +140,19 @@ export default function StorageManager() {
       <div className={styles.actionsCard}>
         <h3>Storage Actions</h3>
         <div className={styles.actions}>
-          <button className={styles.archiveBtn} onClick={handleArchive} title="Archive orders older than 30 days">
-            📦 Archive Old Orders (30+ days)
-          </button>
+          {canWrite && (
+            <button className={styles.archiveBtn} onClick={handleArchive} title="Archive orders older than 30 days">
+              📦 Archive Old Orders (30+ days)
+            </button>
+          )}
           <button className={styles.exportBtn} onClick={handleExport} title='Export all orders (active + archived) to Excel'>
             📊 Export to Excel
           </button>
-          <button className={styles.clearBtn} onClick={handleClearArchive}>
-            🗑️ Clear Archive
-          </button>
+          {canWrite && (
+            <button className={styles.clearBtn} onClick={handleClearArchive}>
+              🗑️ Clear Archive
+            </button>
+          )}
           <button className={styles.refreshBtn} onClick={updateStorage}>
             🔄 Refresh Stats
           </button>

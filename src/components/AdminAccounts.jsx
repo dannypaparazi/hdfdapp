@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { getUsers, createUser, changePassword, updateUserAccess, deleteUser } from '../utils/auth'
+import { getUsers, createUser, changePassword, updateUserPermission, deleteUser, getDefaultPermissions, PERMISSION_TABS } from '../utils/auth'
 import styles from './AdminAccounts.module.css'
 
-export default function AdminAccounts({ currentUser }) {
+export default function AdminAccounts({ currentUser, canWrite = true }) {
   const [users, setUsers] = useState([])
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [showChangePasswordForm, setShowChangePasswordForm] = useState(false)
@@ -10,6 +10,7 @@ export default function AdminAccounts({ currentUser }) {
     username: '',
     password: '',
     role: 'staff',
+    permissions: getDefaultPermissions('staff'),
   })
   const [passwordData, setPasswordData] = useState({
     oldPassword: '',
@@ -31,15 +32,29 @@ export default function AdminAccounts({ currentUser }) {
       return
     }
 
-    const result = createUser(formData.username, formData.password, formData.role)
+    const result = createUser(formData.username, formData.password, formData.role, formData.permissions)
     if (result.success) {
       setMessage({ type: 'success', text: `User "${formData.username}" created successfully` })
       setUsers(getUsers())
-      setFormData({ username: '', password: '', role: 'staff' })
+      setFormData({ username: '', password: '', role: 'staff', permissions: getDefaultPermissions('staff') })
       setShowCreateForm(false)
     } else {
       setMessage({ type: 'error', text: result.error })
     }
+  }
+
+  const handleRoleChange = (role) => {
+    setFormData(prev => ({ ...prev, role, permissions: getDefaultPermissions(role) }))
+  }
+
+  const handleFormPermissionToggle = (tabKey, type) => {
+    setFormData(prev => {
+      const current = prev.permissions[tabKey]
+      const value = !current[type]
+      const updated = { ...current, [type]: value }
+      if (type === 'read' && !value) updated.write = false
+      return { ...prev, permissions: { ...prev.permissions, [tabKey]: updated } }
+    })
   }
 
   const handleChangePassword = (e) => {
@@ -71,14 +86,12 @@ export default function AdminAccounts({ currentUser }) {
     }
   }
 
-  const handleToggleAccess = (userId, type) => {
+  const handleToggleAccess = (userId, tabKey, type) => {
     const user = users.find(u => u.id === userId)
     if (!user) return
 
-    const newCanRead = type === 'read' ? !user.canRead : user.canRead
-    const newCanWrite = type === 'write' ? !user.canWrite : user.canWrite
-
-    updateUserAccess(userId, newCanRead, newCanWrite)
+    const newValue = !user.permissions[tabKey][type]
+    updateUserPermission(userId, tabKey, type, newValue)
     setUsers(getUsers())
     setMessage({ type: 'success', text: 'Access updated' })
   }
@@ -113,12 +126,14 @@ export default function AdminAccounts({ currentUser }) {
         >
           {showChangePasswordForm ? 'Cancel' : 'Change Password'}
         </button>
-        <button
-          className={`${styles.btn} ${styles.btnPrimary}`}
-          onClick={() => setShowCreateForm(!showCreateForm)}
-        >
-          {showCreateForm ? 'Cancel' : '+ Create User'}
-        </button>
+        {canWrite && (
+          <button
+            className={`${styles.btn} ${styles.btnPrimary}`}
+            onClick={() => setShowCreateForm(!showCreateForm)}
+          >
+            {showCreateForm ? 'Cancel' : '+ Create User'}
+          </button>
+        )}
       </div>
 
       {showChangePasswordForm && (
@@ -157,7 +172,7 @@ export default function AdminAccounts({ currentUser }) {
         </form>
       )}
 
-      {showCreateForm && (
+      {canWrite && showCreateForm && (
         <form onSubmit={handleCreateUser} className={styles.form}>
           <h3>Create New User</h3>
           <div className={styles.formGroup}>
@@ -182,11 +197,37 @@ export default function AdminAccounts({ currentUser }) {
             <label>Role</label>
             <select
               value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              onChange={(e) => handleRoleChange(e.target.value)}
             >
               <option value="staff">Staff</option>
               <option value="admin">Admin</option>
             </select>
+          </div>
+          <div className={styles.formGroup}>
+            <label>Tab Access</label>
+            <div className={styles.permissionsGrid}>
+              <div className={styles.permissionsHeader}>
+                <span>Tab</span>
+                <span>Read</span>
+                <span>Write</span>
+              </div>
+              {PERMISSION_TABS.map(({ key, label }) => (
+                <div key={key} className={styles.permissionsRow}>
+                  <span>{label}</span>
+                  <input
+                    type="checkbox"
+                    checked={formData.permissions[key].read}
+                    onChange={() => handleFormPermissionToggle(key, 'read')}
+                  />
+                  <input
+                    type="checkbox"
+                    checked={formData.permissions[key].write}
+                    disabled={!formData.permissions[key].read}
+                    onChange={() => handleFormPermissionToggle(key, 'write')}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
           <button type="submit" className={`${styles.btn} ${styles.btnPrimary}`}>
             Create User
@@ -206,27 +247,31 @@ export default function AdminAccounts({ currentUser }) {
                 </p>
                 <p className={styles.role}>{user.role}</p>
               </div>
-              <div className={styles.access}>
-                <label className={styles.checkbox}>
-                  <input
-                    type="checkbox"
-                    checked={user.canRead}
-                    onChange={() => handleToggleAccess(user.id, 'read')}
-                    disabled={user.id === currentUser.id}
-                  />
-                  Read
-                </label>
-                <label className={styles.checkbox}>
-                  <input
-                    type="checkbox"
-                    checked={user.canWrite}
-                    onChange={() => handleToggleAccess(user.id, 'write')}
-                    disabled={user.id === currentUser.id}
-                  />
-                  Write
-                </label>
+              <div className={styles.permissionsGrid}>
+                <div className={styles.permissionsHeader}>
+                  <span>Tab</span>
+                  <span>Read</span>
+                  <span>Write</span>
+                </div>
+                {PERMISSION_TABS.map(({ key, label }) => (
+                  <div key={key} className={styles.permissionsRow}>
+                    <span>{label}</span>
+                    <input
+                      type="checkbox"
+                      checked={user.permissions[key].read}
+                      onChange={() => handleToggleAccess(user.id, key, 'read')}
+                      disabled={!canWrite || user.id === currentUser.id}
+                    />
+                    <input
+                      type="checkbox"
+                      checked={user.permissions[key].write}
+                      disabled={!canWrite || user.id === currentUser.id || !user.permissions[key].read}
+                      onChange={() => handleToggleAccess(user.id, key, 'write')}
+                    />
+                  </div>
+                ))}
               </div>
-              {user.id !== currentUser.id && (
+              {canWrite && user.id !== currentUser.id && (
                 <button
                   className={styles.deleteBtn}
                   onClick={() => handleDeleteUser(user.id)}

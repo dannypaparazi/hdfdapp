@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { getOrders, deleteOrder, getOrdersFromServer } from '../utils/storage'
 import styles from './OrderHistory.module.css'
 
-export default function OrderHistory() {
+export default function OrderHistory({ canWrite = true }) {
   const [orders, setOrders] = useState([])
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [currentMonth, setCurrentMonth] = useState(new Date())
@@ -190,13 +190,15 @@ export default function OrderHistory() {
                       <div className={styles.lineItemTotal}>
                         ${order.unitPrice ? (order.unitPrice * order.quantity).toFixed(2) : '0.00'}
                       </div>
-                      <button
-                        className={styles.deleteLineBtn}
-                        onClick={() => handleDeleteOrder(order.id)}
-                        title="Delete"
-                      >
-                        ✕
-                      </button>
+                      {canWrite && (
+                        <button
+                          className={styles.deleteLineBtn}
+                          onClick={() => handleDeleteOrder(order.id)}
+                          title="Delete"
+                        >
+                          ✕
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>

@@ -1,6 +1,33 @@
 const USERS_KEY = 'hotpot_users'
 const CURRENT_USER_KEY = 'hotpot_current_user'
 
+// One read/write pair per top-level nav tab. "Home" (table selection) is
+// intentionally not gated -- it holds no data of its own and is required to
+// reach Order Confirmation.
+export const PERMISSION_TABS = [
+  { key: 'confirm', label: 'Order Confirmation' },
+  { key: 'history', label: 'Order History' },
+  { key: 'quantity', label: 'Quantity History' },
+  { key: 'audit', label: 'Audit Trail' },
+  { key: 'admin', label: 'Admin' },
+]
+
+export function getDefaultPermissions(role) {
+  const fullAccess = role === 'admin'
+  const permissions = {}
+  PERMISSION_TABS.forEach(({ key }) => {
+    permissions[key] = { read: true, write: fullAccess || key !== 'admin' }
+  })
+  return permissions
+}
+
+// Older accounts (or the seeded default admin) may not have a permissions
+// object yet -- normalize them to full access rather than locking anyone out.
+function withPermissions(user) {
+  if (user.permissions) return user
+  return { ...user, permissions: getDefaultPermissions(user.role) }
+}
+
 // Initialize with default admin account if no users exist
 function initializeUsers() {
   try {
@@ -13,14 +40,13 @@ function initializeUsers() {
           password: 'admin123',
           role: 'admin',
           createdAt: new Date().toISOString(),
-          canRead: true,
-          canWrite: true,
+          permissions: getDefaultPermissions('admin'),
         }
       ]
       localStorage.setItem(USERS_KEY, JSON.stringify(defaultUsers))
       return defaultUsers
     }
-    return JSON.parse(users)
+    return JSON.parse(users).map(withPermissions)
   } catch (error) {
     console.error('Error initializing users:', error)
     return []
@@ -30,7 +56,7 @@ function initializeUsers() {
 export function getUsers() {
   try {
     const users = localStorage.getItem(USERS_KEY)
-    return users ? JSON.parse(users) : initializeUsers()
+    return users ? JSON.parse(users).map(withPermissions) : initializeUsers()
   } catch (error) {
     console.error('Error reading users:', error)
     return []
@@ -66,7 +92,10 @@ export function logout() {
 export function getCurrentUser() {
   try {
     const user = localStorage.getItem(CURRENT_USER_KEY)
-    return user ? JSON.parse(user) : null
+    // A session logged in before permissions existed has no permissions
+    // field cached here -- normalize it the same way getUsers() does, so an
+    // already-open admin session doesn't silently lose write access.
+    return user ? withPermissions(JSON.parse(user)) : null
   } catch (error) {
     console.error('Error getting current user:', error)
     return null
@@ -77,7 +106,7 @@ export function isLoggedIn() {
   return getCurrentUser() !== null
 }
 
-export function createUser(username, password, role = 'staff') {
+export function createUser(username, password, role = 'staff', permissions = null) {
   try {
     const users = getUsers()
 
@@ -92,8 +121,7 @@ export function createUser(username, password, role = 'staff') {
       password,
       role,
       createdAt: new Date().toISOString(),
-      canRead: true,
-      canWrite: role === 'admin' || role === 'staff',
+      permissions: permissions || getDefaultPermissions(role),
     }
 
     users.push(newUser)
@@ -123,7 +151,7 @@ export function changePassword(userId, oldPassword, newPassword) {
   }
 }
 
-export function updateUserAccess(userId, canRead, canWrite) {
+export function updateUserPermission(userId, tabKey, type, value) {
   try {
     const users = getUsers()
     const user = users.find(u => u.id === userId)
@@ -132,13 +160,17 @@ export function updateUserAccess(userId, canRead, canWrite) {
       return { success: false, error: 'User not found' }
     }
 
-    user.canRead = canRead
-    user.canWrite = canWrite
+    user.permissions = user.permissions || getDefaultPermissions(user.role)
+    user.permissions[tabKey] = { ...user.permissions[tabKey], [type]: value }
+    // Read access is required for write access to mean anything.
+    if (type === 'read' && !value) {
+      user.permissions[tabKey].write = false
+    }
     localStorage.setItem(USERS_KEY, JSON.stringify(users))
     return { success: true }
   } catch (error) {
-    console.error('Error updating user access:', error)
-    return { success: false, error: 'Failed to update access' }
+    console.error('Error updating user permission:', error)
+    return { success: false, error: 'Failed to update permission' }
   }
 }
 

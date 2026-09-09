@@ -43,6 +43,9 @@ export default function App() {
     setActiveTab('confirm')
   }
 
+  const canRead = (tabKey) => currentUser?.permissions?.[tabKey]?.read !== false
+  const canWrite = (tabKey) => currentUser?.permissions?.[tabKey]?.write === true
+
   // User ordering mode (via QR code)
   if (userTable !== null) {
     return <UserOrder table={userTable} onLogout={handleUserLogout} />
@@ -82,47 +85,61 @@ export default function App() {
         >
           Home
         </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'confirm' ? styles.active : ''}`}
-          onClick={() => setActiveTab('confirm')}
-          disabled={!selectedTable}
-          title={!selectedTable ? 'Select a table first' : ''}
-        >
-          Order Confirmation
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'history' ? styles.active : ''}`}
-          onClick={() => setActiveTab('history')}
-        >
-          Order History
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'quantity' ? styles.active : ''}`}
-          onClick={() => setActiveTab('quantity')}
-        >
-          Quantity History
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'audit' ? styles.active : ''}`}
-          onClick={() => setActiveTab('audit')}
-        >
-          Audit Trail
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'admin' ? styles.active : ''}`}
-          onClick={() => setActiveTab('admin')}
-        >
-          Admin
-        </button>
+        {canRead('confirm') && (
+          <button
+            className={`${styles.tab} ${activeTab === 'confirm' ? styles.active : ''}`}
+            onClick={() => setActiveTab('confirm')}
+            disabled={!selectedTable}
+            title={!selectedTable ? 'Select a table first' : ''}
+          >
+            Order Confirmation
+          </button>
+        )}
+        {canRead('history') && (
+          <button
+            className={`${styles.tab} ${activeTab === 'history' ? styles.active : ''}`}
+            onClick={() => setActiveTab('history')}
+          >
+            Order History
+          </button>
+        )}
+        {canRead('quantity') && (
+          <button
+            className={`${styles.tab} ${activeTab === 'quantity' ? styles.active : ''}`}
+            onClick={() => setActiveTab('quantity')}
+          >
+            Quantity History
+          </button>
+        )}
+        {canRead('audit') && (
+          <button
+            className={`${styles.tab} ${activeTab === 'audit' ? styles.active : ''}`}
+            onClick={() => setActiveTab('audit')}
+          >
+            Audit Trail
+          </button>
+        )}
+        {canRead('admin') && (
+          <button
+            className={`${styles.tab} ${activeTab === 'admin' ? styles.active : ''}`}
+            onClick={() => setActiveTab('admin')}
+          >
+            Admin
+          </button>
+        )}
       </nav>
 
       <main className={styles.content}>
         {activeTab === 'home' && <Home onTableSelect={handleTableSelect} />}
-        {activeTab === 'confirm' && selectedTable && <OrderConfirmation table={selectedTable} />}
-        {activeTab === 'history' && <OrderHistory />}
-        {activeTab === 'quantity' && <QuantityHistory />}
-        {activeTab === 'audit' && <AuditTrail />}
-        {activeTab === 'admin' && <AdminPanel currentUser={currentUser} />}
+        {activeTab === 'confirm' && selectedTable && canRead('confirm') && (
+          <OrderConfirmation table={selectedTable} canWrite={canWrite('confirm')} />
+        )}
+        {activeTab === 'history' && canRead('history') && <OrderHistory canWrite={canWrite('history')} />}
+        {activeTab === 'quantity' && canRead('quantity') && <QuantityHistory />}
+        {activeTab === 'audit' && canRead('audit') && <AuditTrail />}
+        {activeTab === 'admin' && canRead('admin') && (
+          <AdminPanel currentUser={currentUser} canWrite={canWrite('admin')} />
+        )}
       </main>
     </div>
   )

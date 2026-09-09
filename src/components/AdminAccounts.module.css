@@ -122,7 +122,7 @@
 
 .userRow {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
   padding: 1rem;
   background: var(--color-bg);
@@ -159,29 +159,55 @@
   text-transform: uppercase;
 }
 
-.access {
+.permissionsGrid {
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 260px;
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
 }
 
-.checkbox {
-  display: flex;
+.permissionsHeader,
+.permissionsRow {
+  display: grid;
+  grid-template-columns: 1fr 50px 50px;
   align-items: center;
   gap: 0.5rem;
-  cursor: pointer;
-  font-size: 0.9rem;
+}
+
+.permissionsHeader {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.permissionsHeader span:not(:first-child),
+.permissionsRow input {
+  justify-self: center;
+}
+
+.permissionsRow span {
+  font-size: 0.85rem;
   color: var(--color-text);
 }
 
-.checkbox input {
+.permissionsRow input {
   cursor: pointer;
-  width: auto;
+  width: 16px;
+  height: 16px;
   margin: 0;
 }
 
-.checkbox input:disabled {
+.permissionsRow input:disabled {
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 .deleteBtn {
@@ -207,8 +233,9 @@
     align-items: flex-start;
   }
 
-  .access {
+  .permissionsGrid {
     width: 100%;
+    min-width: 0;
   }
 
   .deleteBtn {

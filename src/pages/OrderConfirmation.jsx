@@ -8,7 +8,7 @@ const formatTime = (isoString) => {
   return new Date(isoString).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 }
 
-export default function OrderConfirmation({ table }) {
+export default function OrderConfirmation({ table, canWrite = true }) {
   const [menuItems, setMenuItems] = useState([])
   const [orders, setOrders] = useState([])
   const [selectedQuantities, setSelectedQuantities] = useState({})
@@ -267,44 +267,48 @@ export default function OrderConfirmation({ table }) {
                   )}
                   <div className={styles.itemTimestamp}>{formatTime(order.timestamp || order.createdAt)}</div>
                 </div>
-                <div className={styles.quantitySection}>
-                  <button
-                    className={styles.quantityBtn}
-                    onClick={() => handleQuantityChangeOrder(order.id, Math.max(1, order.quantity - 1))}
-                    title="Decrease quantity"
-                  >
-                    −
-                  </button>
-                  <span className={styles.quantityDisplay}>{order.quantity}</span>
-                  <button
-                    className={styles.quantityBtn}
-                    onClick={() => handleQuantityChangeOrder(order.id, order.quantity + 1)}
-                    title="Increase quantity"
-                  >
-                    +
-                  </button>
-                </div>
-                <button
-                  className={styles.servedBtn}
-                  onClick={() => handleMarkServed(order)}
-                  title="Mark as served"
-                >
-                  ✓
-                </button>
-                <button
-                  className={styles.rejectBtn}
-                  onClick={() => handleReject(order)}
-                  title="Unable to serve — notifies customer"
-                >
-                  ⚠
-                </button>
-                <button
-                  className={styles.deleteBtn}
-                  onClick={() => handleDeleteOrder(order.id)}
-                  title="Delete item"
-                >
-                  ✕
-                </button>
+                {canWrite && (
+                  <>
+                    <div className={styles.quantitySection}>
+                      <button
+                        className={styles.quantityBtn}
+                        onClick={() => handleQuantityChangeOrder(order.id, Math.max(1, order.quantity - 1))}
+                        title="Decrease quantity"
+                      >
+                        −
+                      </button>
+                      <span className={styles.quantityDisplay}>{order.quantity}</span>
+                      <button
+                        className={styles.quantityBtn}
+                        onClick={() => handleQuantityChangeOrder(order.id, order.quantity + 1)}
+                        title="Increase quantity"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <button
+                      className={styles.servedBtn}
+                      onClick={() => handleMarkServed(order)}
+                      title="Mark as served"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      className={styles.rejectBtn}
+                      onClick={() => handleReject(order)}
+                      title="Unable to serve — notifies customer"
+                    >
+                      ⚠
+                    </button>
+                    <button
+                      className={styles.deleteBtn}
+                      onClick={() => handleDeleteOrder(order.id)}
+                      title="Delete item"
+                    >
+                      ✕
+                    </button>
+                  </>
+                )}
               </div>
             ))}
           </div>
@@ -343,20 +347,24 @@ export default function OrderConfirmation({ table }) {
                   )}
                   <div className={styles.itemTimestamp}>{formatTime(order.timestamp || order.createdAt)}</div>
                 </div>
-                <button
-                  className={styles.servedBtn}
-                  onClick={() => handleTransferToHistory(order)}
-                  title="Send to Order History"
-                >
-                  ✓
-                </button>
-                <button
-                  className={styles.deleteBtn}
-                  onClick={() => handleDeleteOrder(order.id)}
-                  title="Delete item"
-                >
-                  ✕
-                </button>
+                {canWrite && (
+                  <>
+                    <button
+                      className={styles.servedBtn}
+                      onClick={() => handleTransferToHistory(order)}
+                      title="Send to Order History"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      className={styles.deleteBtn}
+                      onClick={() => handleDeleteOrder(order.id)}
+                      title="Delete item"
+                    >
+                      ✕
+                    </button>
+                  </>
+                )}
               </div>
             ))}
           </div>
@@ -371,9 +379,11 @@ export default function OrderConfirmation({ table }) {
         <div className={styles.totalSection}>
           <h3>Served Total</h3>
           <p className={styles.totalAmount}>${servedTotal.toFixed(2)}</p>
-          <button className={styles.checkoutBtn} onClick={handleCheckout}>
-            Checkout
-          </button>
+          {canWrite && (
+            <button className={styles.checkoutBtn} onClick={handleCheckout}>
+              Checkout
+            </button>
+          )}
         </div>
       )}
 
@@ -410,7 +420,7 @@ export default function OrderConfirmation({ table }) {
                   ${item.cost.toFixed(2)}
                 </div>
                 <div className={styles.lineItemQuantity}>
-                  {customQuantityId === item.id ? (
+                  {!canWrite ? null : customQuantityId === item.id ? (
                     <div className={styles.customQuantityInputLine}>
                       <input
                         type="number"

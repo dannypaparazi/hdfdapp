@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { getItems, addItem, updateItem, deleteItem, compressImage } from '../utils/storage'
 import styles from './MenuManager.module.css'
 
-export default function MenuManager() {
+export default function MenuManager({ canWrite = true }) {
   const [items, setItems] = useState([])
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -143,14 +143,16 @@ export default function MenuManager() {
         </div>
       )}
 
-      <button
-        className={`${styles.btn} ${styles.btnPrimary}`}
-        onClick={() => setShowForm(!showForm)}
-      >
-        {showForm ? 'Cancel' : '+ Add Item'}
-      </button>
+      {canWrite && (
+        <button
+          className={`${styles.btn} ${styles.btnPrimary}`}
+          onClick={() => setShowForm(!showForm)}
+        >
+          {showForm ? 'Cancel' : '+ Add Item'}
+        </button>
+      )}
 
-      {showForm && (
+      {canWrite && showForm && (
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.grid}>
             <div className={styles.formGroup}>
@@ -232,20 +234,22 @@ export default function MenuManager() {
                     {item.description && (
                       <p className={styles.description}>{item.description}</p>
                     )}
-                    <div className={styles.actions}>
-                      <button
-                        className={`${styles.btnSmall} ${styles.btnEdit}`}
-                        onClick={() => handleEdit(item)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className={`${styles.btnSmall} ${styles.btnDelete}`}
-                        onClick={() => handleDelete(item.id, item.name)}
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    {canWrite && (
+                      <div className={styles.actions}>
+                        <button
+                          className={`${styles.btnSmall} ${styles.btnEdit}`}
+                          onClick={() => handleEdit(item)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className={`${styles.btnSmall} ${styles.btnDelete}`}
+                          onClick={() => handleDelete(item.id, item.name)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

@@ -5,7 +5,7 @@ import StorageManager from '../components/StorageManager'
 import QRCodeGenerator from '../components/QRCodeGenerator'
 import styles from './AdminPanel.module.css'
 
-export default function AdminPanel({ currentUser }) {
+export default function AdminPanel({ currentUser, canWrite = true }) {
   const [activeSection, setActiveSection] = useState('menu')
 
   return (
@@ -37,10 +37,10 @@ export default function AdminPanel({ currentUser }) {
         </button>
       </div>
 
-      {activeSection === 'menu' && <MenuManager />}
+      {activeSection === 'menu' && <MenuManager canWrite={canWrite} />}
       {activeSection === 'qr' && <QRCodeGenerator />}
-      {activeSection === 'accounts' && <AdminAccounts currentUser={currentUser} />}
-      {activeSection === 'storage' && <StorageManager />}
+      {activeSection === 'accounts' && <AdminAccounts currentUser={currentUser} canWrite={canWrite} />}
+      {activeSection === 'storage' && <StorageManager canWrite={canWrite} />}
     </div>
   )
 }
