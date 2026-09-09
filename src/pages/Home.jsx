@@ -11,6 +11,7 @@ const formatTime = (isoString) => {
 export default function Home({ onTableSelect }) {
   const tables = Array.from({ length: 20 }, (_, i) => i + 1)
   const [pendingOrders, setPendingOrders] = useState([])
+  const pendingTables = new Set(pendingOrders.map(o => o.table))
 
   useEffect(() => {
     const fetchPending = async () => {
@@ -61,12 +62,13 @@ export default function Home({ onTableSelect }) {
           {tables.map(tableNum => (
             <button
               key={tableNum}
-              className={styles.tableButton}
+              className={`${styles.tableButton} ${pendingTables.has(tableNum) ? styles.tableHasPending : ''}`}
               onClick={() => onTableSelect(tableNum)}
-              title={`Table ${tableNum}`}
+              title={pendingTables.has(tableNum) ? `Table ${tableNum} — pending order` : `Table ${tableNum}`}
             >
               <span className={styles.tableIcon}>🪑</span>
               <span className={styles.tableNumber}>{tableNum}</span>
+              {pendingTables.has(tableNum) && <span className={styles.pendingDot} />}
             </button>
           ))}
         </div>
