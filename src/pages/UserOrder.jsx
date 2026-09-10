@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getItems, getItemsFromServer, addOrder, getOrders, getOrdersFromServer } from '../utils/storage'
+import { getItems, getItemsFromServer, addOrder, getOrders, getOrdersFromServer, getBannerFromServer } from '../utils/storage'
 import { getFormattedTableName } from '../utils/tableCounter'
 import styles from './UserOrder.module.css'
 
@@ -70,6 +70,11 @@ export default function UserOrder({ table, onLogout }) {
   const [servedNotifications, setServedNotifications] = useState(new Set())
   const [customQtyId, setCustomQtyId] = useState(null)
   const [customQtyValue, setCustomQtyValue] = useState('')
+  const [banner, setBanner] = useState(null)
+
+  useEffect(() => {
+    getBannerFromServer().then(setBanner)
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -189,6 +194,13 @@ export default function UserOrder({ table, onLogout }) {
 
   return (
     <div className={styles.container}>
+      {/* Banner */}
+      {banner && (
+        <div className={styles.bannerWrap}>
+          <img src={banner} alt="" className={styles.banner} />
+        </div>
+      )}
+
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerContent}>

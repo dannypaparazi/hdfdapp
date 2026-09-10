@@ -3,6 +3,7 @@ import AdminAccounts from '../components/AdminAccounts'
 import MenuManager from '../components/MenuManager'
 import StorageManager from '../components/StorageManager'
 import QRCodeGenerator from '../components/QRCodeGenerator'
+import BannerManager from '../components/BannerManager'
 import styles from './AdminPanel.module.css'
 
 export default function AdminPanel({ currentUser, canWrite = true }) {
@@ -35,12 +36,19 @@ export default function AdminPanel({ currentUser, canWrite = true }) {
         >
           Storage
         </button>
+        <button
+          className={`${styles.sectionBtn} ${activeSection === 'banner' ? styles.active : ''}`}
+          onClick={() => setActiveSection('banner')}
+        >
+          Banner
+        </button>
       </div>
 
       {activeSection === 'menu' && <MenuManager canWrite={canWrite} />}
       {activeSection === 'qr' && <QRCodeGenerator />}
       {activeSection === 'accounts' && <AdminAccounts currentUser={currentUser} canWrite={canWrite} />}
       {activeSection === 'storage' && <StorageManager canWrite={canWrite} />}
+      {activeSection === 'banner' && <BannerManager canWrite={canWrite} />}
     </div>
   )
 }

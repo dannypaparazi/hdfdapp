@@ -1,9 +1,10 @@
 import { addArchivedOrder, getArchivedOrders, clearArchivedOrders, getArchiveStats } from './indexeddb'
 import { getFormattedTableName } from './tableCounter'
-import { getItemsFromFirebase, addItemToFirebase, updateItemInFirebase, deleteItemFromFirebase, getOrdersFromFirebase, addOrderToFirebase, deleteOrderFromFirebase, updateOrderStatusInFirebase } from './firebase'
+import { getItemsFromFirebase, addItemToFirebase, updateItemInFirebase, deleteItemFromFirebase, getOrdersFromFirebase, addOrderToFirebase, deleteOrderFromFirebase, updateOrderStatusInFirebase, getBannerFromFirebase, setBannerInFirebase, deleteBannerFromFirebase } from './firebase'
 
 const ORDERS_KEY = 'hotpot_orders'
 const ITEMS_KEY = 'hotpot_items'
+const BANNER_KEY = 'hotpot_banner'
 
 // Storage optimization utilities
 export function getStorageUsage() {
@@ -321,6 +322,33 @@ export async function getOrdersFromServer(table = null) {
 getItemsFromServer().catch(error => {
   console.log('Initial Firebase sync failed, using localStorage:', error)
 })
+
+// User app banner (admin-managed, shown at the top of the customer app)
+export async function getBannerFromServer() {
+  try {
+    const banner = await getBannerFromFirebase()
+    const photo = banner?.photo || null
+    if (photo) {
+      localStorage.setItem(BANNER_KEY, photo)
+    } else {
+      localStorage.removeItem(BANNER_KEY)
+    }
+    return photo
+  } catch (error) {
+    console.error('Error fetching banner from server:', error)
+    return localStorage.getItem(BANNER_KEY)
+  }
+}
+
+export async function updateBanner(photo) {
+  await setBannerInFirebase(photo)
+  localStorage.setItem(BANNER_KEY, photo)
+}
+
+export async function removeBanner() {
+  await deleteBannerFromFirebase()
+  localStorage.removeItem(BANNER_KEY)
+}
 
 export function cleanupCompletedOrders() {
   try {

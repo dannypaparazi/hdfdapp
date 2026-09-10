@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getFirestore, collection, getDocs, addDoc, setDoc, deleteDoc, doc, query, where, updateDoc } from 'firebase/firestore'
+import { getFirestore, collection, getDocs, getDoc, addDoc, setDoc, deleteDoc, doc, query, where, updateDoc } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: "AIzaSyBGkvrIQ57msMQGz2Bfm7ENhC8An65Zjcc",
@@ -18,6 +18,8 @@ export const db = getFirestore(app)
 const ITEMS_COLLECTION = 'hotpot_items'
 const ORDERS_COLLECTION = 'hotpot_orders'
 const USERS_COLLECTION = 'hotpot_users'
+const SETTINGS_COLLECTION = 'hotpot_settings'
+const BANNER_DOC_ID = 'banner'
 
 // Menu Items
 export async function getItemsFromFirebase() {
@@ -164,6 +166,38 @@ export async function deleteUserFromFirebase(userId) {
     await deleteDoc(doc(db, USERS_COLLECTION, userId))
   } catch (error) {
     console.error('Error deleting user from Firebase:', error)
+    throw error
+  }
+}
+
+// User app banner
+export async function getBannerFromFirebase() {
+  try {
+    const snap = await getDoc(doc(db, SETTINGS_COLLECTION, BANNER_DOC_ID))
+    return snap.exists() ? snap.data() : null
+  } catch (error) {
+    console.error('Error fetching banner from Firebase:', error)
+    return null
+  }
+}
+
+export async function setBannerInFirebase(photo) {
+  try {
+    await setDoc(doc(db, SETTINGS_COLLECTION, BANNER_DOC_ID), {
+      photo,
+      updatedAt: new Date().toISOString(),
+    })
+  } catch (error) {
+    console.error('Error setting banner in Firebase:', error)
+    throw error
+  }
+}
+
+export async function deleteBannerFromFirebase() {
+  try {
+    await deleteDoc(doc(db, SETTINGS_COLLECTION, BANNER_DOC_ID))
+  } catch (error) {
+    console.error('Error deleting banner from Firebase:', error)
     throw error
   }
 }
