@@ -71,6 +71,7 @@ export default function UserOrder({ table, onLogout }) {
   const [customQtyId, setCustomQtyId] = useState(null)
   const [customQtyValue, setCustomQtyValue] = useState('')
   const [banner, setBanner] = useState(null)
+  const [quickViewItem, setQuickViewItem] = useState(null)
 
   useEffect(() => {
     getBannerFromServer().then(setBanner)
@@ -179,6 +180,7 @@ export default function UserOrder({ table, onLogout }) {
       // would show the customer an order that staff can never actually see.
       const updatedOrders = await fetchOrdersForDisplay(table)
       setOrders(updatedOrders)
+      setQuickViewItem(null)
       setMessage({ type: 'success', text: `${item.name} x${quantity} added!` })
       setTimeout(() => setMessage({ type: '', text: '' }), 2000)
     } catch (error) {
@@ -191,6 +193,47 @@ export default function UserOrder({ table, onLogout }) {
   // the order summary or total.
   const billableOrders = orders.filter(order => order.status !== 'unable_to_serve')
   const totalAmount = billableOrders.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
+
+  // Shared between the menu grid card and the photo quick-view modal so
+  // picking a quantity (including "Other") behaves identically either way.
+  const renderQtyControls = (item) => (
+    customQtyId === item.id ? (
+      <div className={styles.customQtyInput}>
+        <input
+          type="number"
+          min="1"
+          value={customQtyValue}
+          onChange={(e) => setCustomQtyValue(e.target.value)}
+          placeholder="Qty"
+          autoFocus
+        />
+        <button onClick={handleCustomQtySubmit} className={styles.confirmBtn}>
+          OK
+        </button>
+      </div>
+    ) : (
+      <div className={styles.qtySelector}>
+        <select
+          value={selectedQuantities[item.id] || ''}
+          onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+          className={styles.qtySelect}
+        >
+          <option value="">Qty</option>
+          {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
+            <option key={num} value={num}>{num}</option>
+          ))}
+          <option value="other">Other</option>
+        </select>
+        <button
+          onClick={() => handleAddToOrder(item)}
+          disabled={!selectedQuantities[item.id]}
+          className={styles.addBtn}
+        >
+          Add
+        </button>
+      </div>
+    )
+  )
 
   return (
     <div className={styles.container}>
@@ -353,9 +396,14 @@ export default function UserOrder({ table, onLogout }) {
             {menuItems.map(item => (
               <div key={item.id} className={styles.menuCard}>
                 {item.photo && (
-                  <div className={styles.itemImage}>
+                  <button
+                    type="button"
+                    className={styles.itemImage}
+                    onClick={() => setQuickViewItem(item)}
+                    aria-label={`View ${item.name} and choose a quantity`}
+                  >
                     <img src={item.photo} alt={item.name} />
-                  </div>
+                  </button>
                 )}
                 <div className={styles.itemInfo}>
                   <h3>{item.name}</h3>
@@ -365,48 +413,44 @@ export default function UserOrder({ table, onLogout }) {
                   <div className={styles.price}>${item.cost.toFixed(2)}</div>
                 </div>
                 <div className={styles.itemControls}>
-                  {customQtyId === item.id ? (
-                    <div className={styles.customQtyInput}>
-                      <input
-                        type="number"
-                        min="1"
-                        value={customQtyValue}
-                        onChange={(e) => setCustomQtyValue(e.target.value)}
-                        placeholder="Qty"
-                        autoFocus
-                      />
-                      <button onClick={handleCustomQtySubmit} className={styles.confirmBtn}>
-                        OK
-                      </button>
-                    </div>
-                  ) : (
-                    <div className={styles.qtySelector}>
-                      <select
-                        value={selectedQuantities[item.id] || ''}
-                        onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                        className={styles.qtySelect}
-                      >
-                        <option value="">Qty</option>
-                        {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
-                          <option key={num} value={num}>{num}</option>
-                        ))}
-                        <option value="other">Other</option>
-                      </select>
-                      <button
-                        onClick={() => handleAddToOrder(item)}
-                        disabled={!selectedQuantities[item.id]}
-                        className={styles.addBtn}
-                      >
-                        Add
-                      </button>
-                    </div>
-                  )}
+                  {renderQtyControls(item)}
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Photo Quick View */}
+      {quickViewItem && (
+        <div className={styles.modalOverlay} onClick={() => setQuickViewItem(null)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className={styles.modalClose}
+              onClick={() => setQuickViewItem(null)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            {quickViewItem.photo && (
+              <div className={styles.modalImageWrap}>
+                <img src={quickViewItem.photo} alt={quickViewItem.name} className={styles.modalImage} />
+              </div>
+            )}
+            <div className={styles.modalInfo}>
+              <h3>{quickViewItem.name}</h3>
+              {quickViewItem.description && (
+                <p className={styles.description}>{quickViewItem.description}</p>
+              )}
+              <div className={styles.price}>${quickViewItem.cost.toFixed(2)}</div>
+              <div className={styles.itemControls}>
+                {renderQtyControls(quickViewItem)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer Note */}
       {orders.length > 0 && (
