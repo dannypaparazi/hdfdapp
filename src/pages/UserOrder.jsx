@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { getItems, getItemsFromServer, addOrder, getOrders, getOrdersFromServer } from '../utils/storage'
 import { getFormattedTableName } from '../utils/tableCounter'
 import styles from './UserOrder.module.css'
@@ -12,16 +12,53 @@ const formatTime = (isoString) => {
 // paid for and closed out must never see that old order resurface as if
 // still live -- table sessions live only in each device's own localStorage,
 // so there's no reliable id to tell "my order, now checked out" apart from
-// "a stranger's order from three sessions ago" except which ids this tab has
-// actually observed. So: an order only ever enters `knownIds` while it's
-// still non-completed, and a completed order is shown only if its id is
-// already in there -- letting a live order that gets checked out while this
-// tab is open surface as "Completed" without resurrecting stale history.
-const fetchOrdersForDisplay = async (table, knownIds) => {
+// "a stranger's order from a past session" except which ids this device has
+// actually watched go through a non-completed state. That set has to survive
+// a reload -- a customer typically checks their phone again *after* walking
+// back from paying, not while staring at the screen -- so it's kept in
+// localStorage (keyed per table) rather than in memory, and pruned to a
+// generous 24h window so it can't accumulate forever.
+const KNOWN_ORDERS_KEY = 'hotpot_known_orders'
+const KNOWN_ORDERS_RETENTION_MS = 24 * 60 * 60 * 1000
+
+function readKnownOrderIds(table) {
+  try {
+    const map = JSON.parse(localStorage.getItem(KNOWN_ORDERS_KEY) || '{}')
+    return new Set(map[table] || [])
+  } catch (error) {
+    console.error('Error reading known orders:', error)
+    return new Set()
+  }
+}
+
+function writeKnownOrderIds(table, ids) {
+  try {
+    const map = JSON.parse(localStorage.getItem(KNOWN_ORDERS_KEY) || '{}')
+    const cutoff = Date.now() - KNOWN_ORDERS_RETENTION_MS
+    map[table] = Array.from(ids).filter(id => Number(id) > cutoff)
+    localStorage.setItem(KNOWN_ORDERS_KEY, JSON.stringify(map))
+  } catch (error) {
+    console.error('Error writing known orders:', error)
+  }
+}
+
+function clearKnownOrderIds(table) {
+  try {
+    const map = JSON.parse(localStorage.getItem(KNOWN_ORDERS_KEY) || '{}')
+    delete map[table]
+    localStorage.setItem(KNOWN_ORDERS_KEY, JSON.stringify(map))
+  } catch (error) {
+    console.error('Error clearing known orders:', error)
+  }
+}
+
+const fetchOrdersForDisplay = async (table) => {
   const allOrders = await getOrdersFromServer(table)
+  const knownIds = readKnownOrderIds(table)
   allOrders.forEach(o => {
     if (o.status !== 'completed') knownIds.add(o.id)
   })
+  writeKnownOrderIds(table, knownIds)
   return allOrders.filter(o => o.status !== 'completed' || knownIds.has(o.id))
 }
 
@@ -33,15 +70,8 @@ export default function UserOrder({ table, onLogout }) {
   const [servedNotifications, setServedNotifications] = useState(new Set())
   const [customQtyId, setCustomQtyId] = useState(null)
   const [customQtyValue, setCustomQtyValue] = useState('')
-  const knownOrderIdsRef = useRef(new Set())
-  const knownOrdersTableRef = useRef(table)
 
   useEffect(() => {
-    if (knownOrdersTableRef.current !== table) {
-      knownOrderIdsRef.current = new Set()
-      knownOrdersTableRef.current = table
-    }
-
     const fetchData = async () => {
       try {
         const items = await getItemsFromServer()
@@ -52,7 +82,7 @@ export default function UserOrder({ table, onLogout }) {
       }
 
       try {
-        const fetchedOrders = await fetchOrdersForDisplay(table, knownOrderIdsRef.current)
+        const fetchedOrders = await fetchOrdersForDisplay(table)
         console.log('📱 USER POLL: Table:', table, '| Orders:', fetchedOrders.length, '| Details:', fetchedOrders.map(o => ({ id: o.id, itemName: o.itemName, status: o.status })))
 
         // Track which orders changed to served status
@@ -142,7 +172,7 @@ export default function UserOrder({ table, onLogout }) {
       // throwing on a sync failure (by design, so a flaky connection
       // doesn't block placing the order) -- so trusting the local echo here
       // would show the customer an order that staff can never actually see.
-      const updatedOrders = await fetchOrdersForDisplay(table, knownOrderIdsRef.current)
+      const updatedOrders = await fetchOrdersForDisplay(table)
       setOrders(updatedOrders)
       setMessage({ type: 'success', text: `${item.name} x${quantity} added!` })
       setTimeout(() => setMessage({ type: '', text: '' }), 2000)
@@ -169,6 +199,7 @@ export default function UserOrder({ table, onLogout }) {
         </div>
         <button className={styles.logoutBtn} onClick={() => {
           console.log('Exit clicked')
+          clearKnownOrderIds(table)
           onLogout()
         }}>
           Exit
