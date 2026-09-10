@@ -8,6 +8,18 @@ const formatTime = (isoString) => {
   return new Date(isoString).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 }
 
+// Exclude completed (checked-out) orders. Without this, a customer who
+// rescans a table's QR code after a past session was already paid for and
+// closed out sees that old order again as if it were still live -- table
+// sessions are only tracked in each device's own localStorage, so an admin
+// looking at a *new* session number never shows it, making it look like the
+// order vanished on the admin side while staying stuck on the customer's
+// screen.
+const fetchActiveOrders = async (table) => {
+  const orders = await getOrdersFromServer(table)
+  return orders.filter(o => o.status !== 'completed')
+}
+
 export default function UserOrder({ table, onLogout }) {
   const [menuItems, setMenuItems] = useState([])
   const [orders, setOrders] = useState([])
@@ -28,7 +40,7 @@ export default function UserOrder({ table, onLogout }) {
       }
 
       try {
-        const fetchedOrders = await getOrdersFromServer(table)
+        const fetchedOrders = await fetchActiveOrders(table)
         console.log('📱 USER POLL: Table:', table, '| Orders:', fetchedOrders.length, '| Details:', fetchedOrders.map(o => ({ id: o.id, itemName: o.itemName, status: o.status })))
 
         // Track which orders changed to served status
@@ -91,30 +103,41 @@ export default function UserOrder({ table, onLogout }) {
     setCustomQtyValue('')
   }
 
-  const handleAddToOrder = (item) => {
+  const handleAddToOrder = async (item) => {
     const quantity = selectedQuantities[item.id]
     if (!quantity) {
       setMessage({ type: 'error', text: 'Please select a quantity' })
       return
     }
 
-    addOrder({
-      itemName: item.name,
-      quantity: quantity,
-      description: item.description,
-      unitPrice: item.cost,
-      timestamp: new Date().toISOString(),
-    }, table)
+    try {
+      await addOrder({
+        itemName: item.name,
+        quantity: quantity,
+        description: item.description,
+        unitPrice: item.cost,
+        timestamp: new Date().toISOString(),
+      }, table)
 
-    setSelectedQuantities(prev => {
-      const updated = { ...prev }
-      delete updated[item.id]
-      return updated
-    })
+      setSelectedQuantities(prev => {
+        const updated = { ...prev }
+        delete updated[item.id]
+        return updated
+      })
 
-    setOrders(getOrders(table))
-    setMessage({ type: 'success', text: `${item.name} x${quantity} added!` })
-    setTimeout(() => setMessage({ type: '', text: '' }), 2000)
+      // Read back from the server rather than local storage. addOrder saves
+      // locally first and syncs to Firebase in the background without
+      // throwing on a sync failure (by design, so a flaky connection
+      // doesn't block placing the order) -- so trusting the local echo here
+      // would show the customer an order that staff can never actually see.
+      const updatedOrders = await fetchActiveOrders(table)
+      setOrders(updatedOrders)
+      setMessage({ type: 'success', text: `${item.name} x${quantity} added!` })
+      setTimeout(() => setMessage({ type: '', text: '' }), 2000)
+    } catch (error) {
+      console.error('Failed to add order:', error)
+      setMessage({ type: 'error', text: 'Failed to add order. Please try again.' })
+    }
   }
 
   // Rejected items aren't being charged for, so they shouldn't count toward
