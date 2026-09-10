@@ -233,7 +233,7 @@ export default function UserOrder({ table, onLogout }) {
       {/* Itemized Order List */}
       {orders.length > 0 && (
         <div className={styles.orderItemsList}>
-          <h3>Your Order</h3>
+          <h3>Current Order</h3>
           <div className={styles.itemsTable}>
             {orders.filter(o => o.status !== 'served' && o.status !== 'unable_to_serve' && o.status !== 'completed').map(order => (
               <div key={order.id} className={styles.orderItemRow}>
