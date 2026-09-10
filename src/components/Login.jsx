@@ -9,7 +9,7 @@ export default function Login({ onLoginSuccess }) {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setIsLoading(true)
@@ -26,7 +26,7 @@ export default function Login({ onLoginSuccess }) {
       return
     }
 
-    const user = login(username, password)
+    const user = await login(username, password)
     setIsLoading(false)
 
     if (user) {

@@ -17,6 +17,7 @@ export const db = getFirestore(app)
 // Collections
 const ITEMS_COLLECTION = 'hotpot_items'
 const ORDERS_COLLECTION = 'hotpot_orders'
+const USERS_COLLECTION = 'hotpot_users'
 
 // Menu Items
 export async function getItemsFromFirebase() {
@@ -117,6 +118,52 @@ export async function updateOrderStatusInFirebase(orderId, status) {
     console.log('🔥 FIREBASE: updateDoc successful ✓')
   } catch (error) {
     console.error('🔴 FIREBASE: Error updating order status:', error)
+    throw error
+  }
+}
+
+// Admin accounts
+export async function getUsersFromFirebase() {
+  try {
+    const q = query(collection(db, USERS_COLLECTION))
+    const querySnapshot = await getDocs(q)
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }))
+  } catch (error) {
+    console.error('Error fetching users from Firebase:', error)
+    return []
+  }
+}
+
+export async function addUserToFirebase(userData) {
+  try {
+    // Use setDoc with the user's own id so later updateDoc/deleteDoc calls
+    // (which address documents by this same id) can actually find it.
+    const userRef = doc(db, USERS_COLLECTION, userData.id)
+    await setDoc(userRef, userData)
+    return userData.id
+  } catch (error) {
+    console.error('Error adding user to Firebase:', error)
+    throw error
+  }
+}
+
+export async function updateUserInFirebase(userId, updates) {
+  try {
+    await updateDoc(doc(db, USERS_COLLECTION, userId), updates)
+  } catch (error) {
+    console.error('Error updating user in Firebase:', error)
+    throw error
+  }
+}
+
+export async function deleteUserFromFirebase(userId) {
+  try {
+    await deleteDoc(doc(db, USERS_COLLECTION, userId))
+  } catch (error) {
+    console.error('Error deleting user from Firebase:', error)
     throw error
   }
 }

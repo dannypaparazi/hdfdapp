@@ -1,3 +1,5 @@
+import { getUsersFromFirebase, addUserToFirebase, updateUserInFirebase, deleteUserFromFirebase } from './firebase'
+
 const USERS_KEY = 'hotpot_users'
 const CURRENT_USER_KEY = 'hotpot_current_user'
 
@@ -28,49 +30,95 @@ function withPermissions(user) {
   return { ...user, permissions: getDefaultPermissions(user.role) }
 }
 
-// Initialize with default admin account if no users exist
-function initializeUsers() {
+// Firestore's default rules are wide open (same as every other collection in
+// this app -- there's no backend to check credentials server-side, so the
+// client has to be able to read a user record to verify a login). Hashing
+// means a direct read of the collection exposes only an unusable digest,
+// never the real password. This is a plain unsalted SHA-256 digest, which is
+// a real improvement over plaintext but not a substitute for a proper auth
+// service -- fine for a small internal admin tool, not for anything with a
+// serious threat model.
+async function hashPassword(password) {
+  const bytes = new TextEncoder().encode(password)
+  const digest = await crypto.subtle.digest('SHA-256', bytes)
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+const isHashed = (password) => typeof password === 'string' && /^[0-9a-f]{64}$/.test(password)
+
+function readLocalUsers() {
   try {
-    const users = localStorage.getItem(USERS_KEY)
-    if (!users) {
-      const defaultUsers = [
-        {
-          id: '1',
-          username: 'admin',
-          password: 'admin123',
-          role: 'admin',
-          createdAt: new Date().toISOString(),
-          permissions: getDefaultPermissions('admin'),
-        }
-      ]
-      localStorage.setItem(USERS_KEY, JSON.stringify(defaultUsers))
-      return defaultUsers
+    const raw = localStorage.getItem(USERS_KEY)
+    return raw ? JSON.parse(raw).map(withPermissions) : []
+  } catch (error) {
+    console.error('Error reading cached users:', error)
+    return []
+  }
+}
+
+function cacheUsers(users) {
+  try {
+    localStorage.setItem(USERS_KEY, JSON.stringify(users))
+  } catch (error) {
+    console.error('Error caching users:', error)
+  }
+}
+
+// First run after enabling Firebase sync: the collection is empty but this
+// device may already have real accounts sitting in localStorage from before.
+// Migrate them up (hashing any plaintext password along the way) instead of
+// silently discarding them; fall back to the original admin/admin123 seed
+// only if there's nothing local either.
+async function seedInitialUsers() {
+  const localUsers = readLocalUsers()
+  const seed = localUsers.length > 0 ? localUsers : [{
+    id: '1',
+    username: 'admin',
+    password: 'admin123',
+    role: 'admin',
+    createdAt: new Date().toISOString(),
+    permissions: getDefaultPermissions('admin'),
+  }]
+
+  for (const user of seed) {
+    if (!isHashed(user.password)) {
+      user.password = await hashPassword(user.password)
     }
-    return JSON.parse(users).map(withPermissions)
+    await addUserToFirebase(user)
+  }
+  return seed
+}
+
+export async function getUsers() {
+  try {
+    let users = await getUsersFromFirebase()
+    if (users.length === 0) {
+      users = await seedInitialUsers()
+    }
+    users = users.map(withPermissions)
+    cacheUsers(users)
+    return users
   } catch (error) {
-    console.error('Error initializing users:', error)
-    return []
+    console.error('Error fetching users from server:', error)
+    return readLocalUsers()
   }
 }
 
-export function getUsers() {
+export async function login(username, password) {
   try {
-    const users = localStorage.getItem(USERS_KEY)
-    return users ? JSON.parse(users).map(withPermissions) : initializeUsers()
-  } catch (error) {
-    console.error('Error reading users:', error)
-    return []
-  }
-}
-
-export function login(username, password) {
-  try {
-    const users = getUsers()
-    const user = users.find(u => u.username === username && u.password === password)
+    const users = await getUsers()
+    const hashedInput = await hashPassword(password)
+    // If Firebase is unreachable, getUsers() falls back to whatever's
+    // cached locally -- which, on a device that hasn't synced yet, may
+    // still hold a plaintext password from before hashing existed. Accept
+    // either form rather than failing every login until that device
+    // reconnects.
+    const user = users.find(u => u.username === username &&
+      (u.password === hashedInput || (!isHashed(u.password) && u.password === password)))
 
     if (user) {
       const currentUser = { ...user }
-      delete currentUser.password // Don't store password in session
+      delete currentUser.password // Don't store even the hash in the session
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser))
       return currentUser
     }
@@ -106,9 +154,9 @@ export function isLoggedIn() {
   return getCurrentUser() !== null
 }
 
-export function createUser(username, password, role = 'staff', permissions = null) {
+export async function createUser(username, password, role = 'staff', permissions = null) {
   try {
-    const users = getUsers()
+    const users = await getUsers()
 
     // Check if username already exists
     if (users.find(u => u.username === username)) {
@@ -118,14 +166,14 @@ export function createUser(username, password, role = 'staff', permissions = nul
     const newUser = {
       id: Date.now().toString(),
       username,
-      password,
+      password: await hashPassword(password),
       role,
       createdAt: new Date().toISOString(),
       permissions: permissions || getDefaultPermissions(role),
     }
 
-    users.push(newUser)
-    localStorage.setItem(USERS_KEY, JSON.stringify(users))
+    await addUserToFirebase(newUser)
+    cacheUsers([...users, newUser])
     return { success: true, user: newUser }
   } catch (error) {
     console.error('Error creating user:', error)
@@ -133,17 +181,19 @@ export function createUser(username, password, role = 'staff', permissions = nul
   }
 }
 
-export function changePassword(userId, oldPassword, newPassword) {
+export async function changePassword(userId, oldPassword, newPassword) {
   try {
-    const users = getUsers()
+    const users = await getUsers()
     const user = users.find(u => u.id === userId)
+    const hashedOld = await hashPassword(oldPassword)
 
-    if (!user || user.password !== oldPassword) {
+    if (!user || user.password !== hashedOld) {
       return { success: false, error: 'Current password is incorrect' }
     }
 
-    user.password = newPassword
-    localStorage.setItem(USERS_KEY, JSON.stringify(users))
+    user.password = await hashPassword(newPassword)
+    await updateUserInFirebase(userId, { password: user.password })
+    cacheUsers(users)
     return { success: true }
   } catch (error) {
     console.error('Error changing password:', error)
@@ -151,9 +201,9 @@ export function changePassword(userId, oldPassword, newPassword) {
   }
 }
 
-export function updateUserPermission(userId, tabKey, type, value) {
+export async function updateUserPermission(userId, tabKey, type, value) {
   try {
-    const users = getUsers()
+    const users = await getUsers()
     const user = users.find(u => u.id === userId)
 
     if (!user) {
@@ -166,7 +216,9 @@ export function updateUserPermission(userId, tabKey, type, value) {
     if (type === 'read' && !value) {
       user.permissions[tabKey].write = false
     }
-    localStorage.setItem(USERS_KEY, JSON.stringify(users))
+
+    await updateUserInFirebase(userId, { permissions: user.permissions })
+    cacheUsers(users)
     return { success: true }
   } catch (error) {
     console.error('Error updating user permission:', error)
@@ -174,11 +226,12 @@ export function updateUserPermission(userId, tabKey, type, value) {
   }
 }
 
-export function deleteUser(userId) {
+export async function deleteUser(userId) {
   try {
-    const users = getUsers()
+    await deleteUserFromFirebase(userId)
+    const users = await getUsers()
     const filtered = users.filter(u => u.id !== userId)
-    localStorage.setItem(USERS_KEY, JSON.stringify(filtered))
+    cacheUsers(filtered)
     return { success: true }
   } catch (error) {
     console.error('Error deleting user:', error)

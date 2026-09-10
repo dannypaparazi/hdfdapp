@@ -18,12 +18,17 @@ export default function AdminAccounts({ currentUser, canWrite = true }) {
     confirmPassword: '',
   })
   const [message, setMessage] = useState({ type: '', text: '' })
+  const [loading, setLoading] = useState(true)
+
+  const refreshUsers = async () => {
+    setUsers(await getUsers())
+  }
 
   useEffect(() => {
-    setUsers(getUsers())
+    refreshUsers().finally(() => setLoading(false))
   }, [])
 
-  const handleCreateUser = (e) => {
+  const handleCreateUser = async (e) => {
     e.preventDefault()
     setMessage({ type: '', text: '' })
 
@@ -32,10 +37,10 @@ export default function AdminAccounts({ currentUser, canWrite = true }) {
       return
     }
 
-    const result = createUser(formData.username, formData.password, formData.role, formData.permissions)
+    const result = await createUser(formData.username, formData.password, formData.role, formData.permissions)
     if (result.success) {
       setMessage({ type: 'success', text: `User "${formData.username}" created successfully` })
-      setUsers(getUsers())
+      await refreshUsers()
       setFormData({ username: '', password: '', role: 'staff', permissions: getDefaultPermissions('staff') })
       setShowCreateForm(false)
     } else {
@@ -57,7 +62,7 @@ export default function AdminAccounts({ currentUser, canWrite = true }) {
     })
   }
 
-  const handleChangePassword = (e) => {
+  const handleChangePassword = async (e) => {
     e.preventDefault()
     setMessage({ type: '', text: '' })
 
@@ -76,7 +81,7 @@ export default function AdminAccounts({ currentUser, canWrite = true }) {
       return
     }
 
-    const result = changePassword(currentUser.id, passwordData.oldPassword, passwordData.newPassword)
+    const result = await changePassword(currentUser.id, passwordData.oldPassword, passwordData.newPassword)
     if (result.success) {
       setMessage({ type: 'success', text: 'Password changed successfully' })
       setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' })
@@ -86,25 +91,25 @@ export default function AdminAccounts({ currentUser, canWrite = true }) {
     }
   }
 
-  const handleToggleAccess = (userId, tabKey, type) => {
+  const handleToggleAccess = async (userId, tabKey, type) => {
     const user = users.find(u => u.id === userId)
     if (!user) return
 
     const newValue = !user.permissions[tabKey][type]
-    updateUserPermission(userId, tabKey, type, newValue)
-    setUsers(getUsers())
+    await updateUserPermission(userId, tabKey, type, newValue)
+    await refreshUsers()
     setMessage({ type: 'success', text: 'Access updated' })
   }
 
-  const handleDeleteUser = (userId) => {
+  const handleDeleteUser = async (userId) => {
     if (userId === currentUser.id) {
       setMessage({ type: 'error', text: 'Cannot delete your own account' })
       return
     }
 
     if (confirm('Are you sure you want to delete this user?')) {
-      deleteUser(userId)
-      setUsers(getUsers())
+      await deleteUser(userId)
+      await refreshUsers()
       setMessage({ type: 'success', text: 'User deleted' })
     }
   }
@@ -237,6 +242,7 @@ export default function AdminAccounts({ currentUser, canWrite = true }) {
 
       <div className={styles.usersList}>
         <h3>Users ({users.length})</h3>
+        {loading && <p className={styles.role}>Loading accounts…</p>}
         <div className={styles.table}>
           {users.map(user => (
             <div key={user.id} className={styles.userRow}>
