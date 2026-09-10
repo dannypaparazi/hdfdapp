@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getItems, getItemsFromServer, addOrder, getOrders, getOrdersFromServer } from '../utils/storage'
 import { getFormattedTableName } from '../utils/tableCounter'
 import styles from './UserOrder.module.css'
@@ -8,16 +8,21 @@ const formatTime = (isoString) => {
   return new Date(isoString).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 }
 
-// Exclude completed (checked-out) orders. Without this, a customer who
-// rescans a table's QR code after a past session was already paid for and
-// closed out sees that old order again as if it were still live -- table
-// sessions are only tracked in each device's own localStorage, so an admin
-// looking at a *new* session number never shows it, making it look like the
-// order vanished on the admin side while staying stuck on the customer's
-// screen.
-const fetchActiveOrders = async (table) => {
-  const orders = await getOrdersFromServer(table)
-  return orders.filter(o => o.status !== 'completed')
+// A customer who rescans a table's QR code after a past session was already
+// paid for and closed out must never see that old order resurface as if
+// still live -- table sessions live only in each device's own localStorage,
+// so there's no reliable id to tell "my order, now checked out" apart from
+// "a stranger's order from three sessions ago" except which ids this tab has
+// actually observed. So: an order only ever enters `knownIds` while it's
+// still non-completed, and a completed order is shown only if its id is
+// already in there -- letting a live order that gets checked out while this
+// tab is open surface as "Completed" without resurrecting stale history.
+const fetchOrdersForDisplay = async (table, knownIds) => {
+  const allOrders = await getOrdersFromServer(table)
+  allOrders.forEach(o => {
+    if (o.status !== 'completed') knownIds.add(o.id)
+  })
+  return allOrders.filter(o => o.status !== 'completed' || knownIds.has(o.id))
 }
 
 export default function UserOrder({ table, onLogout }) {
@@ -28,8 +33,15 @@ export default function UserOrder({ table, onLogout }) {
   const [servedNotifications, setServedNotifications] = useState(new Set())
   const [customQtyId, setCustomQtyId] = useState(null)
   const [customQtyValue, setCustomQtyValue] = useState('')
+  const knownOrderIdsRef = useRef(new Set())
+  const knownOrdersTableRef = useRef(table)
 
   useEffect(() => {
+    if (knownOrdersTableRef.current !== table) {
+      knownOrderIdsRef.current = new Set()
+      knownOrdersTableRef.current = table
+    }
+
     const fetchData = async () => {
       try {
         const items = await getItemsFromServer()
@@ -40,7 +52,7 @@ export default function UserOrder({ table, onLogout }) {
       }
 
       try {
-        const fetchedOrders = await fetchActiveOrders(table)
+        const fetchedOrders = await fetchOrdersForDisplay(table, knownOrderIdsRef.current)
         console.log('📱 USER POLL: Table:', table, '| Orders:', fetchedOrders.length, '| Details:', fetchedOrders.map(o => ({ id: o.id, itemName: o.itemName, status: o.status })))
 
         // Track which orders changed to served status
@@ -130,7 +142,7 @@ export default function UserOrder({ table, onLogout }) {
       // throwing on a sync failure (by design, so a flaky connection
       // doesn't block placing the order) -- so trusting the local echo here
       // would show the customer an order that staff can never actually see.
-      const updatedOrders = await fetchActiveOrders(table)
+      const updatedOrders = await fetchOrdersForDisplay(table, knownOrderIdsRef.current)
       setOrders(updatedOrders)
       setMessage({ type: 'success', text: `${item.name} x${quantity} added!` })
       setTimeout(() => setMessage({ type: '', text: '' }), 2000)
@@ -180,7 +192,7 @@ export default function UserOrder({ table, onLogout }) {
         <div className={styles.orderItemsList}>
           <h3>Your Order</h3>
           <div className={styles.itemsTable}>
-            {orders.filter(o => o.status !== 'served' && o.status !== 'unable_to_serve').map(order => (
+            {orders.filter(o => o.status !== 'served' && o.status !== 'unable_to_serve' && o.status !== 'completed').map(order => (
               <div key={order.id} className={styles.orderItemRow}>
                 <div className={styles.itemDetails}>
                   <div className={styles.itemName}>{order.itemName}</div>
@@ -244,6 +256,32 @@ export default function UserOrder({ table, onLogout }) {
                     </div>
                     <div className={styles.itemAmount}>
                       ✕
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Completed (checked out) Items */}
+          {orders.filter(o => o.status === 'completed').length > 0 && (
+            <div className={styles.completedSection}>
+              <h4>🧾 Completed</h4>
+              <div className={styles.itemsTable}>
+                {orders.filter(o => o.status === 'completed').map(order => (
+                  <div key={order.id} className={`${styles.orderItemRow} ${styles.completed}`}>
+                    <div className={styles.itemDetails}>
+                      <div className={styles.itemName}>{order.itemName}</div>
+                      <div className={styles.itemMeta}>
+                        Qty: {order.quantity} × ${order.unitPrice.toFixed(2)}
+                      </div>
+                      <div className={styles.itemTimestamp}>
+                    {formatTime(order.timestamp || order.createdAt)}
+                    {order.source === 'admin' && <span className={styles.staffBadge}>Added by staff</span>}
+                  </div>
+                    </div>
+                    <div className={styles.itemAmount}>
+                      ${(order.quantity * order.unitPrice).toFixed(2)}
                     </div>
                   </div>
                 ))}
