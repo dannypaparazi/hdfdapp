@@ -292,6 +292,11 @@
   border-color: var(--color-border);
 }
 
+.categoryTabFeatured {
+  padding: 0.7rem 1.4rem;
+  font-size: 1.05rem;
+}
+
 .categoryTab.active {
   background: var(--color-primary);
   color: white;

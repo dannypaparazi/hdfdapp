@@ -487,12 +487,18 @@ export default function UserOrder({ table, onLogout }) {
         {menuItems.length > 0 && (
           <div className={styles.categoryTabs}>
             <button
+              className={`${styles.categoryTab} ${styles.categoryTabFeatured} ${activeCategory === 'Set Meal' ? styles.active : ''}`}
+              onClick={() => setActiveCategory('Set Meal')}
+            >
+              Set Meal
+            </button>
+            <button
               className={`${styles.categoryTab} ${activeCategory === 'All' ? styles.active : ''}`}
               onClick={() => setActiveCategory('All')}
             >
               All
             </button>
-            {MENU_CATEGORIES.map(category => (
+            {MENU_CATEGORIES.filter(category => category !== 'Set Meal').map(category => (
               <button
                 key={category}
                 className={`${styles.categoryTab} ${activeCategory === category ? styles.active : ''}`}
