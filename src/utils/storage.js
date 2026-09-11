@@ -229,13 +229,7 @@ export async function addItem(item) {
 
 export async function updateItem(id, item) {
   try {
-    const updatedFields = {
-      name: item.name,
-      cost: item.cost,
-      description: item.description,
-      category: item.category,
-      photo: item.photo,
-    }
+    const updatedFields = { ...item }
     await updateItemInFirebase(id, updatedFields)
     const completeItem = { id, ...updatedFields }
 
