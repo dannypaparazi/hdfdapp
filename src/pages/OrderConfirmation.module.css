@@ -425,6 +425,26 @@
   width: 100%;
 }
 
+.lineOptionRow {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.lineOptionRow .lineQuantitySelect {
+  flex: 1;
+  min-width: 0;
+}
+
+.lineOptionQtyInput {
+  width: 3.2rem;
+  flex-shrink: 0;
+  padding: 0.5rem 0.4rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  box-sizing: border-box;
+}
+
 .quantitySelectorLine {
   display: flex;
   gap: 0.5rem;

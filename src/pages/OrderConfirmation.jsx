@@ -98,17 +98,33 @@ export default function OrderConfirmation({ table, canWrite = true }) {
     setCustomQuantityValue('')
   }
 
-  const handleOptionChange = (itemId, groupLabel, choice) => {
+  // Each group's selection carries a quantity too (e.g. "Marinated Beef x3"),
+  // defaulting to 1 the moment a choice is first picked so the quantity
+  // field has something sensible to show rather than starting blank.
+  const handleOptionChoice = (itemId, groupLabel, choice) => {
     setSelectedOptions(prev => ({
       ...prev,
-      [itemId]: { ...prev[itemId], [groupLabel]: choice },
+      [itemId]: {
+        ...prev[itemId],
+        [groupLabel]: { choice, quantity: prev[itemId]?.[groupLabel]?.quantity || 1 },
+      },
+    }))
+  }
+
+  const handleOptionQuantity = (itemId, groupLabel, quantity) => {
+    setSelectedOptions(prev => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        [groupLabel]: { ...prev[itemId]?.[groupLabel], quantity },
+      },
     }))
   }
 
   const isOptionsComplete = (item) => {
     if (!item.options?.length) return true
     const chosen = selectedOptions[item.id] || {}
-    return item.options.every(group => chosen[group.label])
+    return item.options.every(group => chosen[group.label]?.choice && chosen[group.label]?.quantity > 0)
   }
 
   const handleAddToOrder = async (item) => {
@@ -254,9 +270,13 @@ export default function OrderConfirmation({ table, canWrite = true }) {
     }
   }
 
+  // Orders placed before per-choice quantities existed stored a plain
+  // string per group -- keep displaying those correctly too.
   const formatOrderOptions = (order) => {
     if (!order.selectedOptions) return ''
-    return Object.entries(order.selectedOptions).map(([label, choice]) => `${label}: ${choice}`).join(', ')
+    return Object.entries(order.selectedOptions).map(([label, sel]) =>
+      typeof sel === 'string' ? `${label}: ${sel}` : `${label}: ${sel.choice} x${sel.quantity}`
+    ).join(', ')
   }
 
   const currentOrderItems = orders.filter(order => !order.status || order.status === 'pending')
@@ -457,19 +477,33 @@ export default function OrderConfirmation({ table, canWrite = true }) {
                 <div className={styles.lineItemQuantity}>
                   {canWrite && item.options?.length > 0 && (
                     <div className={styles.lineOptionSelectors}>
-                      {item.options.map(group => (
-                        <select
-                          key={group.label}
-                          value={selectedOptions[item.id]?.[group.label] || ''}
-                          onChange={(e) => handleOptionChange(item.id, group.label, e.target.value)}
-                          className={styles.lineQuantitySelect}
-                        >
-                          <option value="">{group.label}</option>
-                          {group.choices.map(choice => (
-                            <option key={choice} value={choice}>{choice}</option>
-                          ))}
-                        </select>
-                      ))}
+                      {item.options.map(group => {
+                        const sel = selectedOptions[item.id]?.[group.label]
+                        return (
+                          <div key={group.label} className={styles.lineOptionRow}>
+                            <select
+                              value={sel?.choice || ''}
+                              onChange={(e) => handleOptionChoice(item.id, group.label, e.target.value)}
+                              className={styles.lineQuantitySelect}
+                            >
+                              <option value="">{group.label}</option>
+                              {group.choices.map(choice => (
+                                <option key={choice} value={choice}>{choice}</option>
+                              ))}
+                            </select>
+                            {sel?.choice && (
+                              <input
+                                type="number"
+                                min="1"
+                                value={sel.quantity}
+                                onChange={(e) => handleOptionQuantity(item.id, group.label, parseInt(e.target.value) || '')}
+                                className={styles.lineOptionQtyInput}
+                                placeholder="Qty"
+                              />
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
                   {!canWrite ? null : customQuantityId === item.id ? (

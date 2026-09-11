@@ -465,13 +465,29 @@
   margin-bottom: 0.5rem;
 }
 
+.optionRow {
+  display: flex;
+  gap: 0.4rem;
+}
+
 .optionSelect {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 0.5rem;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 0.85rem;
   cursor: pointer;
+  box-sizing: border-box;
+}
+
+.optionQtyInput {
+  width: 3.5rem;
+  flex-shrink: 0;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.85rem;
   box-sizing: border-box;
 }
 
