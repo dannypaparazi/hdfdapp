@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { addOrder, getOrders, deleteOrder, getItems, getOrdersFromServer, getItemsFromServer, updateOrderStatus } from '../utils/storage'
 import { getFormattedTableName, incrementTableCounter } from '../utils/tableCounter'
+import { MENU_CATEGORIES } from '../utils/categories'
 import styles from './OrderConfirmation.module.css'
 
 const formatTime = (isoString) => {
@@ -15,6 +16,7 @@ export default function OrderConfirmation({ table, canWrite = true }) {
   const [customQuantityId, setCustomQuantityId] = useState(null)
   const [customQuantityValue, setCustomQuantityValue] = useState('')
   const [selectedOptions, setSelectedOptions] = useState({})
+  const [activeCategory, setActiveCategory] = useState('All')
   const [message, setMessage] = useState({ type: '', text: '' })
   const requestIdRef = useRef(0)
 
@@ -283,6 +285,7 @@ export default function OrderConfirmation({ table, canWrite = true }) {
   const servedOrderItems = orders.filter(order => order.status === 'served')
   const totalAmount = currentOrderItems.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
   const servedTotal = servedOrderItems.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
+  const visibleMenuItems = activeCategory === 'All' ? menuItems : menuItems.filter(item => item.category === activeCategory)
 
   return (
     <div className={styles.container}>
@@ -452,13 +455,32 @@ export default function OrderConfirmation({ table, canWrite = true }) {
       {/* Menu Items */}
       <div className={styles.menuSection}>
         <h2>Menu</h2>
-        {menuItems.length === 0 ? (
+        {menuItems.length > 0 && (
+          <div className={styles.categoryTabs}>
+            <button
+              className={`${styles.categoryTab} ${activeCategory === 'All' ? styles.active : ''}`}
+              onClick={() => setActiveCategory('All')}
+            >
+              All
+            </button>
+            {MENU_CATEGORIES.map(category => (
+              <button
+                key={category}
+                className={`${styles.categoryTab} ${activeCategory === category ? styles.active : ''}`}
+                onClick={() => setActiveCategory(category)}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        )}
+        {visibleMenuItems.length === 0 ? (
           <div className={styles.empty}>
-            No menu items available. Admin needs to create menu items first.
+            {menuItems.length === 0 ? 'No menu items available. Admin needs to create menu items first.' : `No items in "${activeCategory}" yet.`}
           </div>
         ) : (
           <div className={styles.menuList}>
-            {menuItems.map(item => (
+            {visibleMenuItems.map(item => (
               <div key={item.id} className={styles.menuLineItem}>
                 {item.photo && (
                   <div className={styles.lineItemPhoto}>
