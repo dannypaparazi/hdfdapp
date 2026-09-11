@@ -493,8 +493,14 @@
   white-space: nowrap;
 }
 
-.optionConfirmBtn:hover {
+.optionConfirmBtn:hover:not(:disabled) {
   background: var(--color-primary-hover);
+}
+
+.optionConfirmBtn:disabled {
+  background: var(--color-text-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .lineOptionConfirmed {

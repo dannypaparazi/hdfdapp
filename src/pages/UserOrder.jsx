@@ -168,12 +168,13 @@ export default function UserOrder({ table, onLogout }) {
     }))
   }
 
-  const handleOptionQuantity = (itemId, groupLabel, quantity) => {
+  const handleOptionQuantity = (itemId, groupLabel, quantity, max) => {
+    const capped = quantity && max ? Math.min(quantity, max) : quantity
     setSelectedOptions(prev => ({
       ...prev,
       [itemId]: {
         ...prev[itemId],
-        [groupLabel]: { ...prev[itemId]?.[groupLabel], quantity },
+        [groupLabel]: { ...prev[itemId]?.[groupLabel], quantity: capped },
       },
     }))
   }
@@ -299,7 +300,7 @@ export default function UserOrder({ table, onLogout }) {
                   onChange={(e) => handleOptionChoice(item.id, group.label, e.target.value)}
                   className={styles.optionSelect}
                 >
-                  <option value="">{group.label}</option>
+                  <option value="">{group.label} (max qty {group.max || 1})</option>
                   {group.choices.map(choice => (
                     <option key={choice} value={choice}>{choice}</option>
                   ))}
@@ -309,13 +310,15 @@ export default function UserOrder({ table, onLogout }) {
                     <input
                       type="number"
                       min="1"
+                      max={group.max || undefined}
                       value={sel.quantity}
-                      onChange={(e) => handleOptionQuantity(item.id, group.label, parseInt(e.target.value) || '')}
+                      onChange={(e) => handleOptionQuantity(item.id, group.label, parseInt(e.target.value) || '', group.max)}
                       className={styles.optionQtyInput}
                       placeholder="Qty"
                     />
                     <button
                       type="button"
+                      disabled={!sel.quantity || sel.quantity < 1}
                       onClick={() => confirmGroup(item.id, group.label)}
                       className={styles.optionConfirmBtn}
                     >

@@ -51,7 +51,7 @@ export default function MenuManager({ canWrite = true }) {
   }
 
   const addOptionGroup = () => {
-    setFormData(prev => ({ ...prev, options: [...prev.options, { label: '', choices: [''] }] }))
+    setFormData(prev => ({ ...prev, options: [...prev.options, { label: '', choices: [''], max: 1 }] }))
   }
 
   const removeOptionGroup = (groupIndex) => {
@@ -62,6 +62,13 @@ export default function MenuManager({ canWrite = true }) {
     setFormData(prev => ({
       ...prev,
       options: prev.options.map((group, i) => i === groupIndex ? { ...group, label } : group),
+    }))
+  }
+
+  const updateOptionGroupMax = (groupIndex, max) => {
+    setFormData(prev => ({
+      ...prev,
+      options: prev.options.map((group, i) => i === groupIndex ? { ...group, max } : group),
     }))
   }
 
@@ -104,7 +111,11 @@ export default function MenuManager({ canWrite = true }) {
       // than blocking submission -- a half-filled row is more likely someone
       // changed their mind than a mistake worth erroring over.
       const cleanedOptions = formData.options
-        .map(group => ({ label: group.label.trim(), choices: group.choices.map(c => c.trim()).filter(Boolean) }))
+        .map(group => ({
+          label: group.label.trim(),
+          choices: group.choices.map(c => c.trim()).filter(Boolean),
+          max: Math.max(1, parseInt(group.max) || 1),
+        }))
         .filter(group => group.label && group.choices.length > 0)
 
       const itemData = {
@@ -155,7 +166,7 @@ export default function MenuManager({ canWrite = true }) {
       cost: item.cost.toString(),
       description: item.description,
       category: item.category || MENU_CATEGORIES[0],
-      options: item.options?.length ? item.options.map(g => ({ label: g.label, choices: [...g.choices] })) : [],
+      options: item.options?.length ? item.options.map(g => ({ label: g.label, choices: [...g.choices], max: g.max || 1 })) : [],
       photo: item.photo,
       photoPreview: item.photo,
     })
@@ -295,6 +306,15 @@ export default function MenuManager({ canWrite = true }) {
                       onChange={(e) => updateOptionGroupLabel(groupIndex, e.target.value)}
                       placeholder="Group name, e.g. Choice of Meat"
                     />
+                    <div className={styles.maxChoicesField}>
+                      <label>Max Qty</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={group.max ?? 1}
+                        onChange={(e) => updateOptionGroupMax(groupIndex, e.target.value)}
+                      />
+                    </div>
                     <button type="button" className={styles.removeGroupBtn} onClick={() => removeOptionGroup(groupIndex)}>
                       Remove Group
                     </button>
@@ -376,7 +396,7 @@ export default function MenuManager({ canWrite = true }) {
                     )}
                     {item.options?.length > 0 && (
                       <p className={styles.optionsSummary}>
-                        {item.options.map(g => `${g.label}: ${g.choices.join(', ')}`).join(' • ')}
+                        {item.options.map(g => `${g.label} (max qty ${g.max || 1}): ${g.choices.join(', ')}`).join(' • ')}
                       </p>
                     )}
                     {canWrite && (

@@ -170,15 +170,39 @@
   display: flex;
   gap: 0.5rem;
   margin-bottom: 0.6rem;
+  align-items: center;
 }
 
-.optionGroupHeader input {
+.optionGroupHeader > input {
   flex: 1;
   padding: 0.5rem;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 600;
+}
+
+.maxChoicesField {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.maxChoicesField label {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  margin: 0;
+}
+
+.maxChoicesField input {
+  width: 3.2rem;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  box-sizing: border-box;
 }
 
 .removeGroupBtn {
