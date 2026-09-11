@@ -13,6 +13,7 @@ export default function MenuManager({ canWrite = true }) {
     cost: '',
     description: '',
     category: MENU_CATEGORIES[0],
+    options: [],
     photo: null,
     photoPreview: null,
   })
@@ -49,6 +50,46 @@ export default function MenuManager({ canWrite = true }) {
     }
   }
 
+  const addOptionGroup = () => {
+    setFormData(prev => ({ ...prev, options: [...prev.options, { label: '', choices: [''] }] }))
+  }
+
+  const removeOptionGroup = (groupIndex) => {
+    setFormData(prev => ({ ...prev, options: prev.options.filter((_, i) => i !== groupIndex) }))
+  }
+
+  const updateOptionGroupLabel = (groupIndex, label) => {
+    setFormData(prev => ({
+      ...prev,
+      options: prev.options.map((group, i) => i === groupIndex ? { ...group, label } : group),
+    }))
+  }
+
+  const addChoice = (groupIndex) => {
+    setFormData(prev => ({
+      ...prev,
+      options: prev.options.map((group, i) => i === groupIndex ? { ...group, choices: [...group.choices, ''] } : group),
+    }))
+  }
+
+  const updateChoice = (groupIndex, choiceIndex, value) => {
+    setFormData(prev => ({
+      ...prev,
+      options: prev.options.map((group, i) => i === groupIndex
+        ? { ...group, choices: group.choices.map((c, ci) => ci === choiceIndex ? value : c) }
+        : group),
+    }))
+  }
+
+  const removeChoice = (groupIndex, choiceIndex) => {
+    setFormData(prev => ({
+      ...prev,
+      options: prev.options.map((group, i) => i === groupIndex
+        ? { ...group, choices: group.choices.filter((_, ci) => ci !== choiceIndex) }
+        : group),
+    }))
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setMessage({ type: '', text: '' })
@@ -59,11 +100,19 @@ export default function MenuManager({ canWrite = true }) {
     }
 
     try {
+      // Drop incomplete groups (no label, or every choice left blank) rather
+      // than blocking submission -- a half-filled row is more likely someone
+      // changed their mind than a mistake worth erroring over.
+      const cleanedOptions = formData.options
+        .map(group => ({ label: group.label.trim(), choices: group.choices.map(c => c.trim()).filter(Boolean) }))
+        .filter(group => group.label && group.choices.length > 0)
+
       const itemData = {
         name: formData.name,
         cost: parseFloat(formData.cost),
         description: formData.description,
         category: formData.category,
+        options: cleanedOptions,
         photo: formData.photo,
       }
 
@@ -81,6 +130,7 @@ export default function MenuManager({ canWrite = true }) {
         cost: '',
         description: '',
         category: activeCategory !== 'All' ? activeCategory : MENU_CATEGORIES[0],
+        options: [],
         photo: null,
         photoPreview: null,
       })
@@ -105,6 +155,7 @@ export default function MenuManager({ canWrite = true }) {
       cost: item.cost.toString(),
       description: item.description,
       category: item.category || MENU_CATEGORIES[0],
+      options: item.options?.length ? item.options.map(g => ({ label: g.label, choices: [...g.choices] })) : [],
       photo: item.photo,
       photoPreview: item.photo,
     })
@@ -133,6 +184,7 @@ export default function MenuManager({ canWrite = true }) {
       cost: '',
       description: '',
       category: activeCategory !== 'All' ? activeCategory : MENU_CATEGORIES[0],
+      options: [],
       photo: null,
       photoPreview: null,
     })
@@ -226,6 +278,50 @@ export default function MenuManager({ canWrite = true }) {
           </div>
 
           <div className={styles.formGroup}>
+            <label>Options (e.g. Choice of Meat, Choice of Soup Base)</label>
+            <div className={styles.optionGroups}>
+              {formData.options.map((group, groupIndex) => (
+                <div key={groupIndex} className={styles.optionGroup}>
+                  <div className={styles.optionGroupHeader}>
+                    <input
+                      type="text"
+                      value={group.label}
+                      onChange={(e) => updateOptionGroupLabel(groupIndex, e.target.value)}
+                      placeholder="Group name, e.g. Choice of Meat"
+                    />
+                    <button type="button" className={styles.removeGroupBtn} onClick={() => removeOptionGroup(groupIndex)}>
+                      Remove Group
+                    </button>
+                  </div>
+                  <div className={styles.choicesList}>
+                    {group.choices.map((choice, choiceIndex) => (
+                      <div key={choiceIndex} className={styles.choiceRow}>
+                        <input
+                          type="text"
+                          value={choice}
+                          onChange={(e) => updateChoice(groupIndex, choiceIndex, e.target.value)}
+                          placeholder={`Choice ${choiceIndex + 1}, e.g. Beef`}
+                        />
+                        {group.choices.length > 1 && (
+                          <button type="button" className={styles.removeChoiceBtn} onClick={() => removeChoice(groupIndex, choiceIndex)}>
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button type="button" className={styles.addChoiceBtn} onClick={() => addChoice(groupIndex)}>
+                      + Add Choice
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button type="button" className={styles.addGroupBtn} onClick={addOptionGroup}>
+              + Add Option Group
+            </button>
+          </div>
+
+          <div className={styles.formGroup}>
             <label>Photo</label>
             <input
               type="file"
@@ -271,6 +367,11 @@ export default function MenuManager({ canWrite = true }) {
                     <p className={styles.cost}>${item.cost.toFixed(2)}</p>
                     {item.description && (
                       <p className={styles.description}>{item.description}</p>
+                    )}
+                    {item.options?.length > 0 && (
+                      <p className={styles.optionsSummary}>
+                        {item.options.map(g => `${g.label}: ${g.choices.join(', ')}`).join(' • ')}
+                      </p>
                     )}
                     {canWrite && (
                       <div className={styles.actions}>

@@ -14,6 +14,7 @@ export default function OrderConfirmation({ table, canWrite = true }) {
   const [selectedQuantities, setSelectedQuantities] = useState({})
   const [customQuantityId, setCustomQuantityId] = useState(null)
   const [customQuantityValue, setCustomQuantityValue] = useState('')
+  const [selectedOptions, setSelectedOptions] = useState({})
   const [message, setMessage] = useState({ type: '', text: '' })
   const requestIdRef = useRef(0)
 
@@ -97,10 +98,27 @@ export default function OrderConfirmation({ table, canWrite = true }) {
     setCustomQuantityValue('')
   }
 
+  const handleOptionChange = (itemId, groupLabel, choice) => {
+    setSelectedOptions(prev => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], [groupLabel]: choice },
+    }))
+  }
+
+  const isOptionsComplete = (item) => {
+    if (!item.options?.length) return true
+    const chosen = selectedOptions[item.id] || {}
+    return item.options.every(group => chosen[group.label])
+  }
+
   const handleAddToOrder = async (item) => {
     const quantity = selectedQuantities[item.id]
     if (!quantity) {
       setMessage({ type: 'error', text: 'Please select a quantity' })
+      return
+    }
+    if (!isOptionsComplete(item)) {
+      setMessage({ type: 'error', text: 'Please make a selection for each option' })
       return
     }
 
@@ -117,6 +135,7 @@ export default function OrderConfirmation({ table, canWrite = true }) {
         quantity: quantity,
         description: item.description,
         unitPrice: item.cost,
+        selectedOptions: item.options?.length ? selectedOptions[item.id] : null,
         timestamp: new Date().toISOString(),
         source: 'admin',
       }, table)
@@ -124,6 +143,11 @@ export default function OrderConfirmation({ table, canWrite = true }) {
       console.log('🟢 ORDER ADDED')
 
       setSelectedQuantities(prev => {
+        const updated = { ...prev }
+        delete updated[item.id]
+        return updated
+      })
+      setSelectedOptions(prev => {
         const updated = { ...prev }
         delete updated[item.id]
         return updated
@@ -230,6 +254,11 @@ export default function OrderConfirmation({ table, canWrite = true }) {
     }
   }
 
+  const formatOrderOptions = (order) => {
+    if (!order.selectedOptions) return ''
+    return Object.entries(order.selectedOptions).map(([label, choice]) => `${label}: ${choice}`).join(', ')
+  }
+
   const currentOrderItems = orders.filter(order => !order.status || order.status === 'pending')
   const servedOrderItems = orders.filter(order => order.status === 'served')
   const totalAmount = currentOrderItems.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
@@ -259,6 +288,9 @@ export default function OrderConfirmation({ table, canWrite = true }) {
                   <div className={styles.itemName}>{order.itemName}</div>
                   {order.description && (
                     <div className={styles.itemDescription}>{order.description}</div>
+                  )}
+                  {order.selectedOptions && (
+                    <div className={styles.itemOptions}>{formatOrderOptions(order)}</div>
                   )}
                   {order.unitPrice > 0 && (
                     <div className={styles.itemPrice}>
@@ -340,6 +372,9 @@ export default function OrderConfirmation({ table, canWrite = true }) {
                   {order.description && (
                     <div className={styles.itemDescription}>{order.description}</div>
                   )}
+                  {order.selectedOptions && (
+                    <div className={styles.itemOptions}>{formatOrderOptions(order)}</div>
+                  )}
                   {order.unitPrice > 0 && (
                     <div className={styles.itemPrice}>
                       ${order.unitPrice.toFixed(2)} x {order.quantity} = ${(order.unitPrice * order.quantity).toFixed(2)}
@@ -420,6 +455,23 @@ export default function OrderConfirmation({ table, canWrite = true }) {
                   ${item.cost.toFixed(2)}
                 </div>
                 <div className={styles.lineItemQuantity}>
+                  {canWrite && item.options?.length > 0 && (
+                    <div className={styles.lineOptionSelectors}>
+                      {item.options.map(group => (
+                        <select
+                          key={group.label}
+                          value={selectedOptions[item.id]?.[group.label] || ''}
+                          onChange={(e) => handleOptionChange(item.id, group.label, e.target.value)}
+                          className={styles.lineQuantitySelect}
+                        >
+                          <option value="">{group.label}</option>
+                          {group.choices.map(choice => (
+                            <option key={choice} value={choice}>{choice}</option>
+                          ))}
+                        </select>
+                      ))}
+                    </div>
+                  )}
                   {!canWrite ? null : customQuantityId === item.id ? (
                     <div className={styles.customQuantityInputLine}>
                       <input
@@ -459,7 +511,7 @@ export default function OrderConfirmation({ table, canWrite = true }) {
                       <button
                         className={styles.addLineBtn}
                         onClick={() => handleAddToOrder(item)}
-                        disabled={!selectedQuantities[item.id]}
+                        disabled={!selectedQuantities[item.id] || !isOptionsComplete(item)}
                       >
                         Add
                       </button>

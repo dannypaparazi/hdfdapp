@@ -74,6 +74,7 @@ export default function UserOrder({ table, onLogout }) {
   const [banner, setBanner] = useState(null)
   const [quickViewItem, setQuickViewItem] = useState(null)
   const [activeCategory, setActiveCategory] = useState('All')
+  const [selectedOptions, setSelectedOptions] = useState({})
 
   useEffect(() => {
     getBannerFromServer().then(setBanner)
@@ -153,10 +154,27 @@ export default function UserOrder({ table, onLogout }) {
     setCustomQtyValue('')
   }
 
+  const handleOptionChange = (itemId, groupLabel, choice) => {
+    setSelectedOptions(prev => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], [groupLabel]: choice },
+    }))
+  }
+
+  const isOptionsComplete = (item) => {
+    if (!item.options?.length) return true
+    const chosen = selectedOptions[item.id] || {}
+    return item.options.every(group => chosen[group.label])
+  }
+
   const handleAddToOrder = async (item) => {
     const quantity = selectedQuantities[item.id]
     if (!quantity) {
       setMessage({ type: 'error', text: 'Please select a quantity' })
+      return
+    }
+    if (!isOptionsComplete(item)) {
+      setMessage({ type: 'error', text: 'Please make a selection for each option' })
       return
     }
 
@@ -166,10 +184,16 @@ export default function UserOrder({ table, onLogout }) {
         quantity: quantity,
         description: item.description,
         unitPrice: item.cost,
+        selectedOptions: item.options?.length ? selectedOptions[item.id] : null,
         timestamp: new Date().toISOString(),
       }, table)
 
       setSelectedQuantities(prev => {
+        const updated = { ...prev }
+        delete updated[item.id]
+        return updated
+      })
+      setSelectedOptions(prev => {
         const updated = { ...prev }
         delete updated[item.id]
         return updated
@@ -200,43 +224,67 @@ export default function UserOrder({ table, onLogout }) {
   // Shared between the menu grid card and the photo quick-view modal so
   // picking a quantity (including "Other") behaves identically either way.
   const renderQtyControls = (item) => (
-    customQtyId === item.id ? (
-      <div className={styles.customQtyInput}>
-        <input
-          type="number"
-          min="1"
-          value={customQtyValue}
-          onChange={(e) => setCustomQtyValue(e.target.value)}
-          placeholder="Qty"
-          autoFocus
-        />
-        <button onClick={handleCustomQtySubmit} className={styles.confirmBtn}>
-          OK
-        </button>
-      </div>
-    ) : (
-      <div className={styles.qtySelector}>
-        <select
-          value={selectedQuantities[item.id] || ''}
-          onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-          className={styles.qtySelect}
-        >
-          <option value="">Qty</option>
-          {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
-            <option key={num} value={num}>{num}</option>
+    <>
+      {item.options?.length > 0 && (
+        <div className={styles.optionSelectors}>
+          {item.options.map(group => (
+            <select
+              key={group.label}
+              value={selectedOptions[item.id]?.[group.label] || ''}
+              onChange={(e) => handleOptionChange(item.id, group.label, e.target.value)}
+              className={styles.optionSelect}
+            >
+              <option value="">{group.label}</option>
+              {group.choices.map(choice => (
+                <option key={choice} value={choice}>{choice}</option>
+              ))}
+            </select>
           ))}
-          <option value="other">Other</option>
-        </select>
-        <button
-          onClick={() => handleAddToOrder(item)}
-          disabled={!selectedQuantities[item.id]}
-          className={styles.addBtn}
-        >
-          Add
-        </button>
-      </div>
-    )
+        </div>
+      )}
+      {customQtyId === item.id ? (
+        <div className={styles.customQtyInput}>
+          <input
+            type="number"
+            min="1"
+            value={customQtyValue}
+            onChange={(e) => setCustomQtyValue(e.target.value)}
+            placeholder="Qty"
+            autoFocus
+          />
+          <button onClick={handleCustomQtySubmit} className={styles.confirmBtn}>
+            OK
+          </button>
+        </div>
+      ) : (
+        <div className={styles.qtySelector}>
+          <select
+            value={selectedQuantities[item.id] || ''}
+            onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+            className={styles.qtySelect}
+          >
+            <option value="">Qty</option>
+            {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
+              <option key={num} value={num}>{num}</option>
+            ))}
+            <option value="other">Other</option>
+          </select>
+          <button
+            onClick={() => handleAddToOrder(item)}
+            disabled={!selectedQuantities[item.id] || !isOptionsComplete(item)}
+            className={styles.addBtn}
+          >
+            Add
+          </button>
+        </div>
+      )}
+    </>
   )
+
+  const formatOrderOptions = (order) => {
+    if (!order.selectedOptions) return ''
+    return Object.entries(order.selectedOptions).map(([label, choice]) => `${label}: ${choice}`).join(', ')
+  }
 
   return (
     <div className={styles.container}>
@@ -288,6 +336,9 @@ export default function UserOrder({ table, onLogout }) {
                   <div className={styles.itemMeta}>
                     Qty: {order.quantity} × ${order.unitPrice.toFixed(2)}
                   </div>
+                  {order.selectedOptions && (
+                    <div className={styles.itemOptions}>{formatOrderOptions(order)}</div>
+                  )}
                   <div className={styles.itemTimestamp}>
                     {formatTime(order.timestamp || order.createdAt)}
                     {order.source === 'admin' && <span className={styles.staffBadge}>Added by staff</span>}
@@ -312,6 +363,9 @@ export default function UserOrder({ table, onLogout }) {
                       <div className={styles.itemMeta}>
                         Qty: {order.quantity}
                       </div>
+                      {order.selectedOptions && (
+                        <div className={styles.itemOptions}>{formatOrderOptions(order)}</div>
+                      )}
                       <div className={styles.itemTimestamp}>
                     {formatTime(order.timestamp || order.createdAt)}
                     {order.source === 'admin' && <span className={styles.staffBadge}>Added by staff</span>}
@@ -338,6 +392,9 @@ export default function UserOrder({ table, onLogout }) {
                       <div className={styles.itemMeta}>
                         Qty: {order.quantity}
                       </div>
+                      {order.selectedOptions && (
+                        <div className={styles.itemOptions}>{formatOrderOptions(order)}</div>
+                      )}
                       <div className={styles.itemTimestamp}>
                     {formatTime(order.timestamp || order.createdAt)}
                     {order.source === 'admin' && <span className={styles.staffBadge}>Added by staff</span>}
@@ -364,6 +421,9 @@ export default function UserOrder({ table, onLogout }) {
                       <div className={styles.itemMeta}>
                         Qty: {order.quantity} × ${order.unitPrice.toFixed(2)}
                       </div>
+                      {order.selectedOptions && (
+                        <div className={styles.itemOptions}>{formatOrderOptions(order)}</div>
+                      )}
                       <div className={styles.itemTimestamp}>
                     {formatTime(order.timestamp || order.createdAt)}
                     {order.source === 'admin' && <span className={styles.staffBadge}>Added by staff</span>}

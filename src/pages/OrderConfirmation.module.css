@@ -132,6 +132,12 @@
   margin-top: 0.5rem;
 }
 
+.itemOptions {
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
 .itemTimestamp {
   color: var(--color-text-muted);
   font-size: 0.75rem;
@@ -407,8 +413,16 @@
 .lineItemQuantity {
   flex-shrink: 0;
   display: flex;
-  gap: 0.5rem;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-end;
+}
+
+.lineOptionSelectors {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 100%;
 }
 
 .quantitySelectorLine {
