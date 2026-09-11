@@ -480,6 +480,53 @@
   box-sizing: border-box;
 }
 
+.optionConfirmBtn {
+  flex-shrink: 0;
+  padding: 0.5rem 0.6rem;
+  background: var(--color-primary);
+  color: white;
+  font-weight: 600;
+  font-size: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.optionConfirmBtn:hover {
+  background: var(--color-primary-hover);
+}
+
+.lineOptionConfirmed {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.optionChangeBtn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.optionChangeBtn:hover {
+  color: var(--color-text);
+}
+
 .quantitySelectorLine {
   display: flex;
   gap: 0.5rem;

@@ -75,6 +75,7 @@ export default function UserOrder({ table, onLogout }) {
   const [quickViewItem, setQuickViewItem] = useState(null)
   const [activeCategory, setActiveCategory] = useState('All')
   const [selectedOptions, setSelectedOptions] = useState({})
+  const [confirmedGroups, setConfirmedGroups] = useState({})
 
   useEffect(() => {
     getBannerFromServer().then(setBanner)
@@ -177,10 +178,27 @@ export default function UserOrder({ table, onLogout }) {
     }))
   }
 
+  // Groups are confirmed one at a time, in the order the item defines them,
+  // so the next group's selector only appears once the one before it has
+  // been locked in -- rather than showing every selector at once.
+  const confirmGroup = (itemId, groupLabel) => {
+    setConfirmedGroups(prev => ({
+      ...prev,
+      [itemId]: [...(prev[itemId] || []), groupLabel],
+    }))
+  }
+
+  const changeGroup = (itemId, fromIndex) => {
+    setConfirmedGroups(prev => ({
+      ...prev,
+      [itemId]: (prev[itemId] || []).slice(0, fromIndex),
+    }))
+  }
+
   const isOptionsComplete = (item) => {
     if (!item.options?.length) return true
-    const chosen = selectedOptions[item.id] || {}
-    return item.options.every(group => chosen[group.label]?.choice && chosen[group.label]?.quantity > 0)
+    const confirmed = confirmedGroups[item.id] || []
+    return item.options.every(group => confirmed.includes(group.label))
   }
 
   const handleAddToOrder = async (item) => {
@@ -214,6 +232,11 @@ export default function UserOrder({ table, onLogout }) {
         delete updated[item.id]
         return updated
       })
+      setConfirmedGroups(prev => {
+        const updated = { ...prev }
+        delete updated[item.id]
+        return updated
+      })
 
       // Read back from the server rather than local storage. addOrder saves
       // locally first and syncs to Firebase in the background without
@@ -239,12 +262,36 @@ export default function UserOrder({ table, onLogout }) {
 
   // Shared between the menu grid card and the photo quick-view modal so
   // picking a quantity (including "Other") behaves identically either way.
+  // Groups are walked one at a time in the order the item defines them: a
+  // confirmed group collapses to a summary line, the first unconfirmed one
+  // shows its picker, and anything after that stays hidden until its turn.
   const renderQtyControls = (item) => (
     <>
       {item.options?.length > 0 && (
         <div className={styles.optionSelectors}>
-          {item.options.map(group => {
+          {item.options.map((group, index) => {
+            const confirmed = confirmedGroups[item.id] || []
+            const isConfirmed = confirmed.includes(group.label)
+            const isActive = confirmed.length === index
+            if (!isConfirmed && !isActive) return null
+
             const sel = selectedOptions[item.id]?.[group.label]
+
+            if (isConfirmed) {
+              return (
+                <div key={group.label} className={styles.optionConfirmed}>
+                  <span>{group.label}: {sel?.choice} x{sel?.quantity}</span>
+                  <button
+                    type="button"
+                    onClick={() => changeGroup(item.id, index)}
+                    className={styles.optionChangeBtn}
+                  >
+                    Change
+                  </button>
+                </div>
+              )
+            }
+
             return (
               <div key={group.label} className={styles.optionRow}>
                 <select
@@ -258,21 +305,30 @@ export default function UserOrder({ table, onLogout }) {
                   ))}
                 </select>
                 {sel?.choice && (
-                  <input
-                    type="number"
-                    min="1"
-                    value={sel.quantity}
-                    onChange={(e) => handleOptionQuantity(item.id, group.label, parseInt(e.target.value) || '')}
-                    className={styles.optionQtyInput}
-                    placeholder="Qty"
-                  />
+                  <>
+                    <input
+                      type="number"
+                      min="1"
+                      value={sel.quantity}
+                      onChange={(e) => handleOptionQuantity(item.id, group.label, parseInt(e.target.value) || '')}
+                      className={styles.optionQtyInput}
+                      placeholder="Qty"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => confirmGroup(item.id, group.label)}
+                      className={styles.optionConfirmBtn}
+                    >
+                      Confirm
+                    </button>
+                  </>
                 )}
               </div>
             )
           })}
         </div>
       )}
-      {customQtyId === item.id ? (
+      {!isOptionsComplete(item) ? null : customQtyId === item.id ? (
         <div className={styles.customQtyInput}>
           <input
             type="number"
