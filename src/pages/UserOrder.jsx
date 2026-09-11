@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getItems, getItemsFromServer, addOrder, getOrders, getOrdersFromServer, getBannerFromServer } from '../utils/storage'
 import { getFormattedTableName } from '../utils/tableCounter'
+import { MENU_CATEGORIES } from '../utils/categories'
 import styles from './UserOrder.module.css'
 
 const formatTime = (isoString) => {
@@ -72,6 +73,7 @@ export default function UserOrder({ table, onLogout }) {
   const [customQtyValue, setCustomQtyValue] = useState('')
   const [banner, setBanner] = useState(null)
   const [quickViewItem, setQuickViewItem] = useState(null)
+  const [activeCategory, setActiveCategory] = useState('All')
 
   useEffect(() => {
     getBannerFromServer().then(setBanner)
@@ -193,6 +195,7 @@ export default function UserOrder({ table, onLogout }) {
   // the order summary or total.
   const billableOrders = orders.filter(order => order.status !== 'unable_to_serve')
   const totalAmount = billableOrders.reduce((sum, order) => sum + (order.unitPrice * order.quantity), 0)
+  const visibleMenuItems = activeCategory === 'All' ? menuItems : menuItems.filter(item => item.category === activeCategory)
 
   // Shared between the menu grid card and the photo quick-view modal so
   // picking a quantity (including "Other") behaves identically either way.
@@ -387,13 +390,32 @@ export default function UserOrder({ table, onLogout }) {
       {/* Menu */}
       <div className={styles.menuSection}>
         <h2>Select Items</h2>
-        {menuItems.length === 0 ? (
+        {menuItems.length > 0 && (
+          <div className={styles.categoryTabs}>
+            <button
+              className={`${styles.categoryTab} ${activeCategory === 'All' ? styles.active : ''}`}
+              onClick={() => setActiveCategory('All')}
+            >
+              All
+            </button>
+            {MENU_CATEGORIES.map(category => (
+              <button
+                key={category}
+                className={`${styles.categoryTab} ${activeCategory === category ? styles.active : ''}`}
+                onClick={() => setActiveCategory(category)}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        )}
+        {visibleMenuItems.length === 0 ? (
           <div className={styles.empty}>
-            No items available at this time
+            {menuItems.length === 0 ? 'No items available at this time' : `No items in "${activeCategory}" yet`}
           </div>
         ) : (
           <div className={styles.menuGrid}>
-            {menuItems.map(item => (
+            {visibleMenuItems.map(item => (
               <div key={item.id} className={styles.menuCard}>
                 {item.photo && (
                   <button

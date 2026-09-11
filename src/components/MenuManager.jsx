@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react'
 import { getItems, addItem, updateItem, deleteItem, compressImage } from '../utils/storage'
+import { MENU_CATEGORIES } from '../utils/categories'
 import styles from './MenuManager.module.css'
 
 export default function MenuManager({ canWrite = true }) {
   const [items, setItems] = useState([])
+  const [activeCategory, setActiveCategory] = useState('All')
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [formData, setFormData] = useState({
     name: '',
     cost: '',
     description: '',
+    category: MENU_CATEGORIES[0],
     photo: null,
     photoPreview: null,
   })
@@ -60,6 +63,7 @@ export default function MenuManager({ canWrite = true }) {
         name: formData.name,
         cost: parseFloat(formData.cost),
         description: formData.description,
+        category: formData.category,
         photo: formData.photo,
       }
 
@@ -76,6 +80,7 @@ export default function MenuManager({ canWrite = true }) {
         name: '',
         cost: '',
         description: '',
+        category: activeCategory !== 'All' ? activeCategory : MENU_CATEGORIES[0],
         photo: null,
         photoPreview: null,
       })
@@ -99,6 +104,7 @@ export default function MenuManager({ canWrite = true }) {
       name: item.name,
       cost: item.cost.toString(),
       description: item.description,
+      category: item.category || MENU_CATEGORIES[0],
       photo: item.photo,
       photoPreview: item.photo,
     })
@@ -126,12 +132,14 @@ export default function MenuManager({ canWrite = true }) {
       name: '',
       cost: '',
       description: '',
+      category: activeCategory !== 'All' ? activeCategory : MENU_CATEGORIES[0],
       photo: null,
       photoPreview: null,
     })
   }
 
   const totalCost = items.reduce((sum, item) => sum + item.cost, 0)
+  const visibleItems = activeCategory === 'All' ? items : items.filter(item => item.category === activeCategory)
 
   return (
     <div className={styles.container}>
@@ -142,6 +150,24 @@ export default function MenuManager({ canWrite = true }) {
           {message.text}
         </div>
       )}
+
+      <div className={styles.categoryTabs}>
+        <button
+          className={`${styles.categoryTab} ${activeCategory === 'All' ? styles.active : ''}`}
+          onClick={() => setActiveCategory('All')}
+        >
+          All
+        </button>
+        {MENU_CATEGORIES.map(category => (
+          <button
+            key={category}
+            className={`${styles.categoryTab} ${activeCategory === category ? styles.active : ''}`}
+            onClick={() => setActiveCategory(category)}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
 
       {canWrite && (
         <button
@@ -177,6 +203,15 @@ export default function MenuManager({ canWrite = true }) {
                 min="0"
               />
             </div>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label>Category *</label>
+            <select name="category" value={formData.category} onChange={handleInputChange}>
+              {MENU_CATEGORIES.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
           </div>
 
           <div className={styles.formGroup}>
@@ -216,12 +251,14 @@ export default function MenuManager({ canWrite = true }) {
       )}
 
       <div className={styles.itemsSection}>
-        {items.length === 0 ? (
-          <div className={styles.empty}>No menu items yet. Add your first item above.</div>
+        {visibleItems.length === 0 ? (
+          <div className={styles.empty}>
+            {items.length === 0 ? 'No menu items yet. Add your first item above.' : `No items in "${activeCategory}" yet.`}
+          </div>
         ) : (
           <>
             <div className={styles.grid}>
-              {items.map(item => (
+              {visibleItems.map(item => (
                 <div key={item.id} className={styles.itemCard}>
                   {item.photo && (
                     <div className={styles.photoContainer}>
@@ -229,6 +266,7 @@ export default function MenuManager({ canWrite = true }) {
                     </div>
                   )}
                   <div className={styles.cardContent}>
+                    {item.category && <span className={styles.categoryBadge}>{item.category}</span>}
                     <h4>{item.name}</h4>
                     <p className={styles.cost}>${item.cost.toFixed(2)}</p>
                     {item.description && (

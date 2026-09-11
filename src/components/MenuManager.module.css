@@ -51,6 +51,49 @@
   background-color: var(--color-primary-hover);
 }
 
+.categoryTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.categoryTab {
+  padding: 0.5rem 1rem;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.categoryTab:hover {
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.categoryTab.active {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.categoryBadge {
+  display: inline-block;
+  background: var(--color-primary-light);
+  color: var(--color-primary-hover);
+  font-weight: 600;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  margin-bottom: 0.4rem;
+}
+
 .form {
   background: var(--color-bg);
   padding: 1.5rem;
@@ -81,6 +124,7 @@
 .formGroup input[type="text"],
 .formGroup input[type="number"],
 .formGroup input[type="file"],
+.formGroup select,
 .formGroup textarea {
   padding: 0.6rem;
   border: 1px solid var(--color-border);
@@ -88,9 +132,11 @@
   font-size: 0.9rem;
   font-family: inherit;
   box-sizing: border-box;
+  background: white;
 }
 
 .formGroup input:focus,
+.formGroup select:focus,
 .formGroup textarea:focus {
   outline: none;
   border-color: var(--color-primary);
