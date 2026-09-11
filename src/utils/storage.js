@@ -233,6 +233,7 @@ export async function updateItem(id, item) {
       name: item.name,
       cost: item.cost,
       description: item.description,
+      category: item.category,
       photo: item.photo,
     }
     await updateItemInFirebase(id, updatedFields)
