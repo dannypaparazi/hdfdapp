@@ -76,6 +76,7 @@ export default function UserOrder({ table, onLogout }) {
   const [activeCategory, setActiveCategory] = useState('All')
   const [selectedOptions, setSelectedOptions] = useState({})
   const [confirmedGroups, setConfirmedGroups] = useState({})
+  const [optionDrafts, setOptionDrafts] = useState({})
 
   useEffect(() => {
     getBannerFromServer().then(setBanner)
@@ -155,26 +156,67 @@ export default function UserOrder({ table, onLogout }) {
     setCustomQtyValue('')
   }
 
-  // Each group's selection carries a quantity too (e.g. "Marinated Beef x3"),
-  // defaulting to 1 the moment a choice is first picked so the quantity
-  // field has something sensible to show rather than starting blank.
-  const handleOptionChoice = (itemId, groupLabel, choice) => {
-    setSelectedOptions(prev => ({
+  // A group's selection is a list of {choice, quantity} entries (e.g.
+  // "Beef x2, Pork x2") rather than a single pick, since a group's max qty
+  // (e.g. 4 for Choice of Meat) can be filled by several different choices.
+  // optionDrafts holds the in-progress pick for a group before it's added to
+  // that list, mirroring the pattern selectedQuantities/customQtyValue
+  // already use elsewhere for "value being typed but not yet committed".
+  const groupEntries = (itemId, groupLabel) => selectedOptions[itemId]?.[groupLabel] || []
+  const groupUsedQty = (itemId, groupLabel) => groupEntries(itemId, groupLabel).reduce((sum, e) => sum + e.quantity, 0)
+
+  const setOptionDraftChoice = (itemId, groupLabel, choice) => {
+    setOptionDrafts(prev => ({
       ...prev,
-      [itemId]: {
-        ...prev[itemId],
-        [groupLabel]: { choice, quantity: prev[itemId]?.[groupLabel]?.quantity || 1 },
-      },
+      [itemId]: { ...prev[itemId], [groupLabel]: { choice, quantity: 1 } },
     }))
   }
 
-  const handleOptionQuantity = (itemId, groupLabel, quantity, max) => {
-    const capped = quantity && max ? Math.min(quantity, max) : quantity
+  const setOptionDraftQuantity = (itemId, groupLabel, quantity, remaining) => {
+    const capped = quantity && remaining ? Math.min(quantity, remaining) : quantity
+    setOptionDrafts(prev => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], [groupLabel]: { ...prev[itemId]?.[groupLabel], quantity: capped } },
+    }))
+  }
+
+  // Adding an entry that repeats an already-picked choice merges into it
+  // (bumping its quantity) instead of creating a duplicate line -- needed
+  // since a group can have fewer distinct choices than its max qty (e.g. 3
+  // meats but "up to 4"), so the only way to reach 4 is picking one twice.
+  // Once the group's quota is filled, it confirms itself automatically
+  // rather than waiting for a separate click.
+  const addOptionEntry = (itemId, groupLabel, groupMax) => {
+    const draft = optionDrafts[itemId]?.[groupLabel]
+    if (!draft?.choice || !draft.quantity) return
+
+    const existing = groupEntries(itemId, groupLabel)
+    const existingIndex = existing.findIndex(e => e.choice === draft.choice)
+    const updated = existingIndex >= 0
+      ? existing.map((e, i) => i === existingIndex ? { ...e, quantity: e.quantity + draft.quantity } : e)
+      : [...existing, draft]
+    const total = updated.reduce((sum, e) => sum + e.quantity, 0)
+
+    setSelectedOptions(prev => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], [groupLabel]: updated },
+    }))
+    setOptionDrafts(prev => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], [groupLabel]: null },
+    }))
+
+    if (total >= groupMax) {
+      confirmGroup(itemId, groupLabel)
+    }
+  }
+
+  const removeOptionEntry = (itemId, groupLabel, entryIndex) => {
     setSelectedOptions(prev => ({
       ...prev,
       [itemId]: {
         ...prev[itemId],
-        [groupLabel]: { ...prev[itemId]?.[groupLabel], quantity: capped },
+        [groupLabel]: groupEntries(itemId, groupLabel).filter((_, i) => i !== entryIndex),
       },
     }))
   }
@@ -238,6 +280,11 @@ export default function UserOrder({ table, onLogout }) {
         delete updated[item.id]
         return updated
       })
+      setOptionDrafts(prev => {
+        const updated = { ...prev }
+        delete updated[item.id]
+        return updated
+      })
 
       // Read back from the server rather than local storage. addOrder saves
       // locally first and syncs to Firebase in the background without
@@ -276,12 +323,13 @@ export default function UserOrder({ table, onLogout }) {
             const isActive = confirmed.length === index
             if (!isConfirmed && !isActive) return null
 
-            const sel = selectedOptions[item.id]?.[group.label]
+            const entries = groupEntries(item.id, group.label)
+            const max = group.max || 1
 
             if (isConfirmed) {
               return (
                 <div key={group.label} className={styles.optionConfirmed}>
-                  <span>{group.label}: {sel?.choice} x{sel?.quantity}</span>
+                  <span>{group.label}: {entries.map(e => `${e.choice} x${e.quantity}`).join(', ')}</span>
                   <button
                     type="button"
                     onClick={() => changeGroup(item.id, index)}
@@ -293,38 +341,61 @@ export default function UserOrder({ table, onLogout }) {
               )
             }
 
+            const usedQty = groupUsedQty(item.id, group.label)
+            const remaining = max - usedQty
+            const draft = optionDrafts[item.id]?.[group.label]
+
             return (
-              <div key={group.label} className={styles.optionRow}>
-                <select
-                  value={sel?.choice || ''}
-                  onChange={(e) => handleOptionChoice(item.id, group.label, e.target.value)}
-                  className={styles.optionSelect}
-                >
-                  <option value="">{group.label} (max qty {group.max || 1})</option>
-                  {group.choices.map(choice => (
-                    <option key={choice} value={choice}>{choice}</option>
-                  ))}
-                </select>
-                {sel?.choice && (
-                  <>
-                    <input
-                      type="number"
-                      min="1"
-                      max={group.max || undefined}
-                      value={sel.quantity}
-                      onChange={(e) => handleOptionQuantity(item.id, group.label, parseInt(e.target.value) || '', group.max)}
-                      className={styles.optionQtyInput}
-                      placeholder="Qty"
-                    />
-                    <button
-                      type="button"
-                      disabled={!sel.quantity || sel.quantity < 1}
-                      onClick={() => confirmGroup(item.id, group.label)}
-                      className={styles.optionConfirmBtn}
+              <div key={group.label} className={styles.optionActiveGroup}>
+                {entries.length > 0 && (
+                  <div className={styles.optionEntriesList}>
+                    {entries.map((entry, entryIndex) => (
+                      <div key={entryIndex} className={styles.optionEntryChip}>
+                        <span>{entry.choice} x{entry.quantity}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeOptionEntry(item.id, group.label, entryIndex)}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {remaining > 0 && (
+                  <div className={styles.optionRow}>
+                    <select
+                      value={draft?.choice || ''}
+                      onChange={(e) => setOptionDraftChoice(item.id, group.label, e.target.value)}
+                      className={styles.optionSelect}
                     >
-                      Confirm
-                    </button>
-                  </>
+                      <option value="">{group.label} ({usedQty}/{max})</option>
+                      {group.choices.map(choice => (
+                        <option key={choice} value={choice}>{choice}</option>
+                      ))}
+                    </select>
+                    {draft?.choice && (
+                      <>
+                        <input
+                          type="number"
+                          min="1"
+                          max={remaining}
+                          value={draft.quantity}
+                          onChange={(e) => setOptionDraftQuantity(item.id, group.label, parseInt(e.target.value) || '', remaining)}
+                          className={styles.optionQtyInput}
+                          placeholder="Qty"
+                        />
+                        <button
+                          type="button"
+                          disabled={!draft.quantity || draft.quantity < 1}
+                          onClick={() => addOptionEntry(item.id, group.label, max)}
+                          className={styles.optionConfirmBtn}
+                        >
+                          Add
+                        </button>
+                      </>
+                    )}
+                  </div>
                 )}
               </div>
             )
@@ -370,13 +441,16 @@ export default function UserOrder({ table, onLogout }) {
     </>
   )
 
-  // Orders placed before per-choice quantities existed stored a plain
-  // string per group -- keep displaying those correctly too.
+  // Orders placed before multi-entry groups existed stored either a plain
+  // string or a single {choice, quantity} per group -- keep displaying
+  // those correctly alongside the current array-of-entries format.
   const formatOrderOptions = (order) => {
     if (!order.selectedOptions) return ''
-    return Object.entries(order.selectedOptions).map(([label, sel]) =>
-      typeof sel === 'string' ? `${label}: ${sel}` : `${label}: ${sel.choice} x${sel.quantity}`
-    ).join(', ')
+    return Object.entries(order.selectedOptions).map(([label, sel]) => {
+      if (typeof sel === 'string') return `${label}: ${sel}`
+      if (Array.isArray(sel)) return `${label}: ${sel.map(e => `${e.choice} x${e.quantity}`).join(', ')}`
+      return `${label}: ${sel.choice} x${sel.quantity}`
+    }).join(', ')
   }
 
   return (

@@ -470,6 +470,42 @@
   min-width: 0;
 }
 
+.lineOptionActiveGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 100%;
+}
+
+.lineOptionEntriesList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  justify-content: flex-end;
+}
+
+.lineOptionEntryChip {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.4rem;
+  background: var(--color-primary-light, #eef2ff);
+  color: var(--color-primary-hover);
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.lineOptionEntryChip button {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
 .lineOptionQtyInput {
   width: 3.2rem;
   flex-shrink: 0;

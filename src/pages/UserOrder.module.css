@@ -475,6 +475,40 @@
   gap: 0.4rem;
 }
 
+.optionActiveGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.optionEntriesList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.optionEntryChip {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--color-primary-light);
+  color: var(--color-primary-hover);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.optionEntryChip button {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
 .optionSelect {
   flex: 1;
   min-width: 0;
