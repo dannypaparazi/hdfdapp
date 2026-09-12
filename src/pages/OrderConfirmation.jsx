@@ -293,22 +293,61 @@ export default function OrderConfirmation({ table, canWrite = true }) {
     }
   }
 
-  // Current Order -> rejected (item can't be served). UserOrder.jsx already
-  // watches for this status and shows the customer a "not available"
-  // notification — this is what actually triggers it.
-  const handleReject = async (order) => {
-    if (!confirm(`Mark "${order.itemName}" as unable to serve? The customer will be notified.`)) {
+  // Current Order -> served / partially served / unable to serve. Asks how
+  // much of the ordered quantity can actually be served: the full amount
+  // just serves normally, zero is the old full-reject behavior, and
+  // anything in between splits the single order into two separate order
+  // documents (one 'served' for what's available, one 'unable_to_serve' for
+  // the shortfall) rather than trying to represent a split within one
+  // order. UserOrder.jsx already keys its served/unable-to-serve sections
+  // and customer notifications off status per order id, so two fresh ids
+  // showing up in those statuses is all it needs to display and notify
+  // correctly -- no separate customer-side handling required for the split.
+  const handlePartialServe = async (order) => {
+    const input = window.prompt(
+      `"${order.itemName}" — customer ordered ${order.quantity}. How many can you serve?`,
+      String(order.quantity)
+    )
+    if (input === null) return
+
+    const servable = parseInt(input)
+    if (isNaN(servable) || servable < 0) {
+      setMessage({ type: 'error', text: 'Please enter a valid quantity' })
       return
     }
+
     try {
-      console.log('🟠 ADMIN: handleReject clicked - orderId:', order.id)
-      await updateOrderStatus(order.id, 'unable_to_serve')
+      if (servable >= order.quantity) {
+        await updateOrderStatus(order.id, 'served')
+        await refreshOrders()
+        setMessage({ type: 'success', text: `"${order.itemName}" marked served` })
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000)
+        return
+      }
+
+      if (servable === 0) {
+        await updateOrderStatus(order.id, 'unable_to_serve')
+        await refreshOrders()
+        setMessage({ type: 'success', text: `"${order.itemName}" marked unable to serve — customer notified` })
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000)
+        return
+      }
+
+      const shortfall = order.quantity - servable
+      await deleteOrder(order.id)
+
+      const servedOrder = await addOrder({ ...order, quantity: servable }, table)
+      await updateOrderStatus(servedOrder.id, 'served')
+
+      const shortOrder = await addOrder({ ...order, quantity: shortfall }, table)
+      await updateOrderStatus(shortOrder.id, 'unable_to_serve')
+
       await refreshOrders()
-      setMessage({ type: 'success', text: `"${order.itemName}" marked unable to serve — customer notified` })
+      setMessage({ type: 'success', text: `${servable} served, ${shortfall} unable to serve — customer notified` })
       setTimeout(() => setMessage({ type: '', text: '' }), 3000)
     } catch (error) {
-      console.error('🔴 ADMIN: Error rejecting order:', error)
-      setMessage({ type: 'error', text: 'Failed to update status' })
+      console.error('🔴 ADMIN: Error updating served quantity:', error)
+      setMessage({ type: 'error', text: 'Failed to update order' })
     }
   }
 
@@ -424,8 +463,8 @@ export default function OrderConfirmation({ table, canWrite = true }) {
                     </button>
                     <button
                       className={styles.rejectBtn}
-                      onClick={() => handleReject(order)}
-                      title="Unable to serve — notifies customer"
+                      onClick={() => handlePartialServe(order)}
+                      title="Enter how much can be served"
                     >
                       ⚠
                     </button>
